@@ -5,59 +5,54 @@ from datetime import datetime
 # --- 1. 페이지 설정 및 디자인 테마 ---
 st.set_page_config(page_title="Heat Input Master", layout="wide")
 
-color_bg = "#F2F2F2"      
-color_white = "#FFFFFF"   
-color_line = "#000000"    
-color_orange = "#FF6B00"
-color_pass = "#28A745"
-color_fail = "#DC3545"
+# UI 컬러 가이드: 주황색 완전 배제
+color_bg = "#F2F2F2"      # 연회색 배경
+color_white = "#FFFFFF"   # 흰색
+color_line = "#000000"    # 검은색 라인
+color_pass = "#28A745"    # 합격(녹색)
+color_fail = "#DC3545"    # 불합격(적색)
 
 if 'history' not in st.session_state: st.session_state.history = []
 
-# CSS 주입: '-' 버튼 왼쪽 배치 및 오렌지 윤곽선 정밀 시공
+# CSS 주입: 모노톤 테마 및 버튼 좌우 분리 시공
 st.markdown(f"""
     <style>
     .stApp {{ background-color: {color_bg}; color: {color_line}; }}
     
-    /* 타이틀 및 주황색 수평선 밀착 시공 */
+    /* 타이틀 및 상단 검은색 수평선 */
     .header-container {{ padding-top: 5px; display: flex; align-items: center; margin-bottom: 0px; }}
-    .orange-divider {{ border-bottom: 5px solid {color_orange}; margin-top: 2px; margin-bottom: 20px; width: 100%; }}
+    .black-divider {{ border-bottom: 5px solid {color_line}; margin-top: 2px; margin-bottom: 25px; width: 100%; }}
     .title-text {{ font-size: 2.3rem; font-weight: 900; margin-left: 15px; }}
 
-    /* [요청 핵심] 숫자 입력창 내부 버튼 재배치 ([-] [Input] [+]) */
+    /* [요청] 숫자 입력창 내부 버튼 재배치 ([-] 왼쪽, [+] 오른쪽) */
     div[data-testid="stNumberInputContainer"] {{
-        background-color: #4A3728 !important; 
-        border: 3px solid {color_orange} !important;
-        border-radius: 8px !important;
+        background-color: {color_white} !important; 
+        border: 2px solid {color_line} !important; /* 검은색 라인으로 변경 */
+        border-radius: 4px !important;
         height: 55px !important;
         display: flex !important;
         align-items: center !important;
     }}
     
-    /* 입력창 내부 숫자 스타일 */
     div[data-testid="stNumberInputContainer"] input {{
-        color: {color_orange} !important;
+        color: {color_line} !important;
         font-size: 1.4rem !important;
         font-weight: 900 !important;
         text-align: center !important;
         background-color: transparent !important;
-        border: none !important;
     }}
 
-    /* [-], [+] 버튼 크기 및 위치 조정 */
+    /* 사이드바 및 입력창 버튼 스타일 */
     button[data-testid="baseButton-secondary"] {{
-        background-color: transparent !important;
-        color: {color_orange} !important;
-        border: none !important;
+        color: {color_line} !important;
         font-size: 24px !important;
         font-weight: 900 !important;
         min-width: 45px !important;
     }}
     
-    /* 사이드바 WPS 입력창 폭 60% */
     section[data-testid="stSidebar"] .stNumberInput {{ width: 85% !important; }}
 
-    /* [공정 버튼] 2줄 그리드, 얇고 길게 (폭 200%, 높이 60%) */
+    /* [공정 버튼] 2줄 그리드, 얇고 길게 (Black & White) */
     div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] {{
         display: flex !important;
         flex-wrap: wrap !important;
@@ -67,25 +62,24 @@ st.markdown(f"""
         flex: 0 0 calc(50% - 5px) !important;
         min-height: 42px !important;
         background-color: {color_white} !important;
-        color: {color_line} !important;
-        border: 2.5px solid {color_orange} !important;
+        border: 2px solid {color_line} !important;
         padding: 5px !important;
-        border-radius: 8px !important;
+        border-radius: 4px !important;
     }}
     div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label[data-checked="true"] {{
         background-color: {color_line} !important;
     }}
     div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label[data-checked="true"] p {{
-        color: {color_orange} !important;
+        color: {color_white} !important;
     }}
 
-    /* [입력창 밸런스] 라벨+입력창 1줄, 입력창 폭 60% */
+    /* [입력창 밸런스] 라벨+입력창 1줄 */
     .input-row {{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }}
 
-    /* [결과 박스] 높이 축소 (40%) 및 상하 분리 */
+    /* [결과 박스] 모노톤 박스 분리 */
     .result-value-box {{
         background-color: {color_white};
-        border: 3px solid {color_orange};
+        border: 3px solid {color_line};
         height: 55px !important;
         display: flex;
         align-items: center;
@@ -101,11 +95,11 @@ st.markdown(f"""
         justify-content: center;
         font-size: 1.4rem;
         font-weight: 900;
-        border: 2.5px solid {color_line};
+        border: 2px solid {color_line};
         color: {color_white};
     }}
 
-    .save-action-box {{ border: 2.5px solid {color_line}; padding: 12px; background-color: #E6E6E6; border-radius: 8px; margin-top: 15px; }}
+    .save-action-box {{ border: 2px solid {color_line}; padding: 12px; background-color: #E6E6E6; margin-top: 15px; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -119,12 +113,11 @@ with col_logo:
 with col_title:
     st.markdown(f'<span class="title-text">Heat Input Master</span>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
-st.markdown('<div class="orange-divider"></div>', unsafe_allow_html=True)
+st.markdown('<div class="black-divider"></div>', unsafe_allow_html=True) # 주황색 대신 검은색 선
 
 # --- 3. 사이드바 (규격 및 WPS 설정) ---
 with st.sidebar:
     st.markdown("### 📜 Standard Selection")
-    # Standard 선택 버튼 크기를 Number Input과 동일하게 설정
     std_mode = st.radio("Std", options=['ISO', 'AWS'], label_visibility="collapsed")
     
     st.markdown("<br>### ⚙️ WPS range", unsafe_allow_html=True)
@@ -137,13 +130,13 @@ with st.sidebar:
 # --- 4. 메인 대시보드 (3열 밸런스) ---
 col1, col2, col3 = st.columns([1.1, 1.2, 0.9])
 
-# [섹션 1] Select Process (2줄 그리드 슬림화)
+# [섹션 1] Select Process (모노톤 그리드)
 with col1:
     st.markdown("### 1. Select Process")
     proc = st.radio("P", options=['SAW', 'FCAW', 'SMAW', 'GMAW'], horizontal=True, label_visibility="collapsed")
     k = 1.0 if std_mode == 'AWS' or proc == 'SAW' else 0.8
 
-# [섹션 2] Input Parameters (1줄 평평한 정렬, 폭 60%)
+# [섹션 2] Input Parameters (1줄 정렬, 소수점 1자리)
 with col2:
     st.markdown("### 2. Input Parameters")
     
@@ -156,8 +149,6 @@ with col2:
     a = render_row("Amperage (A)", 220.0, 5.0, "a_m")
     l = render_row("Length (mm)", 150.0, 10.0, "l_m")
     t = render_row("Time (Sec)", 120.0, 1.0, "t_m")
-    
-    speed = (l / t) * 60 if t > 0 else 0
 
 # [섹션 3] Live Result & Save
 with col3:
@@ -176,7 +167,7 @@ with col3:
             "Proc": proc, "V": v, "A": a, "L": l, "T": t,
             "HI": f"{hi:.3f}", "Status": "PASS" if is_pass else "FAIL"
         })
-        st.toast("Success: Logged")
+        st.toast("Logged")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # --- 5. 히스토리 데이터 ---
