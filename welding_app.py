@@ -13,7 +13,7 @@ color_fail = "#DC3545"
 
 if 'history' not in st.session_state: st.session_state.history = []
 
-# --- 2. CSS 정밀 레이아웃 주입 ---
+# --- 2. CSS 초정밀 레이아웃 주입 ---
 st.markdown(f"""
     <style>
     /* 전체 배경 및 폰트 강제 고정 */
@@ -27,7 +27,7 @@ st.markdown(f"""
     /* 타이틀 텍스트 크기 고정 및 볼드 해제 */
     .title-text {{ font-size: 2.3rem; font-weight: normal; margin-left: 15px; color: {color_line}; }}
     
-    /* [폰트] 모든 라벨 및 텍스트 1.5rem 고정 & 볼드 해제 (font-weight: normal) */
+    /* 모든 라벨 및 텍스트 1.5rem 절대 고정 (볼드 해제) */
     .master-label {{
         font-size: 1.5rem !important;
         font-weight: normal !important;
@@ -42,7 +42,7 @@ st.markdown(f"""
         display: flex !important; width: 100% !important; gap: 10px !important; margin-bottom: 0px !important;
     }}
     section[data-testid="stSidebar"] div[role="radiogroup"] label {{
-        flex: 1 1 50% !important; /* 폭 2배 꽉 채움 */
+        flex: 1 1 50% !important; 
         height: 60px !important;  
         border: 2px solid {color_line} !important;
         background-color: {color_white} !important;
@@ -54,12 +54,12 @@ st.markdown(f"""
     /* Select Process 2x2 그리드, 높이 60px 고정 */
     div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] {{
         display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-columns: repeat(2, 1fr) !important; 
         gap: 10px !important;
         margin-top: -5px !important;
     }}
     div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label {{
-        height: 60px !important;
+        height: 60px !important; 
         border: 2px solid {color_line} !important;
         background-color: {color_white} !important;
         border-radius: 4px !important;
@@ -67,10 +67,18 @@ st.markdown(f"""
         margin: 0 !important; padding: 0 !important;
     }}
     
-    /* 라디오 버튼 텍스트 볼드 해제 및 선택 반전 */
+    /* 라디오 버튼 텍스트 통일 (1.5rem) 및 선택 반전 */
     div[role="radiogroup"] label p {{ font-size: 1.5rem !important; font-weight: normal !important; margin: 0 !important; }}
     div[role="radiogroup"] label[data-checked="true"] {{ background-color: {color_line} !important; }}
     div[role="radiogroup"] label[data-checked="true"] p {{ color: {color_white} !important; }}
+
+    /* [초정밀 공사] Voltage 등 라벨과 입력창 사이의 여백(Gap/Padding) 완전 제거 */
+    div[data-testid="column"]:nth-of-type(2) div[data-testid="stHorizontalBlock"] {{
+        gap: 0rem !important; /* 기본 컬럼 틈새 강제 삭제 */
+    }}
+    div[data-testid="column"]:nth-of-type(2) div[data-testid="stHorizontalBlock"] div[data-testid="column"] {{
+        padding: 0 !important; /* 기본 패딩 강제 삭제 */
+    }}
 
     /* 입력창 높이 60px 고정, (-)왼쪽 (+)오른쪽 배치 */
     div[data-testid="stNumberInputContainer"] {{
@@ -79,21 +87,18 @@ st.markdown(f"""
         border-radius: 4px !important;
         height: 60px !important; 
         display: flex !important;
-        justify-content: space-between !important;
+        justify-content: space-between !important; 
         align-items: center !important;
         padding: 0 !important;
         margin-bottom: 0px !important;
+        margin-left: 5px !important; /* 라벨 텍스트와 겹치지 않게 숨쉴 틈 5px만 부여 */
     }}
-    
-    /* 입력창 숫자 볼드 해제 */
     div[data-testid="stNumberInputContainer"] input {{
         color: {color_line} !important;
         font-size: 1.5rem !important; 
         font-weight: normal !important;
         text-align: center !important;
     }}
-    
-    /* +,- 버튼 볼드 해제 */
     button[data-testid="baseButton-secondary"] {{
         color: {color_line} !important;
         min-width: 60px !important;
@@ -104,40 +109,29 @@ st.markdown(f"""
         border: none !important;
     }}
 
-    /* 입력창 여백 최소화 */
+    /* 입력창 상하 여백 최소화 */
     .stNumberInput {{ margin-bottom: -10px !important; }}
     
-    /* [요청] WPS range 입력창 폭 축소 (Standard 박스와 유사한 비율로 조절) */
-    section[data-testid="stSidebar"] div.stNumberInput {{
-        width: 65% !important; 
-    }}
+    /* WPS range 입력창 폭 축소 */
+    section[data-testid="stSidebar"] div.stNumberInput {{ width: 65% !important; }}
     
     /* Live Result 박스 높이 고정 및 볼드 해제 */
     .result-value-box {{
-        background-color: {color_white};
-        border: 3px solid {color_line};
-        height: 75px !important;
-        display: flex; align-items: center; justify-content: center;
+        background-color: {color_white}; border: 3px solid {color_line};
+        height: 75px !important; display: flex; align-items: center; justify-content: center;
         font-size: 2.2rem; font-weight: normal; margin-bottom: 10px; border-radius: 4px;
         margin-top: -5px;
     }}
     .result-status-box {{
-        height: 60px !important;
-        display: flex; align-items: center; justify-content: center;
+        height: 60px !important; display: flex; align-items: center; justify-content: center;
         font-size: 1.8rem; font-weight: normal; 
         border: 2px solid {color_line}; color: {color_white}; border-radius: 4px;
     }}
     
-    /* 저장 버튼 볼드 해제 */
     .save-btn-container button {{
-        height: 60px !important;
-        font-size: 1.5rem !important;
-        font-weight: normal !important;
-        border: 2px solid {color_line} !important;
-        background-color: #E6E6E6 !important;
-        color: {color_line} !important;
-        border-radius: 4px !important;
-        margin-top: 10px !important;
+        height: 60px !important; font-size: 1.5rem !important; font-weight: normal !important;
+        border: 2px solid {color_line} !important; background-color: #E6E6E6 !important;
+        color: {color_line} !important; border-radius: 4px !important; margin-top: 10px !important;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -154,36 +148,36 @@ with c_title:
 st.markdown('</div>', unsafe_allow_html=True)
 st.markdown('<div class="black-divider"></div>', unsafe_allow_html=True)
 
-# --- 4. 사이드바 (WPS 폭 축소 적용) ---
+# --- 4. 사이드바 ---
 with st.sidebar:
     st.markdown("<div class='master-label'>Standard</div>", unsafe_allow_html=True)
     std_mode = st.radio("Std", options=['ISO', 'AWS'], horizontal=True, label_visibility="collapsed")
     
     st.markdown("<br><div class='master-label'>WPS range</div>", unsafe_allow_html=True)
-    # CSS width: 65% 적용됨
     w_min = st.number_input("Min", value=1.0, step=0.1, format="%.1f")
     w_max = st.number_input("Max", value=2.5, step=0.1, format="%.1f")
     
     st.markdown("<br><hr style='margin:10px 0;'>", unsafe_allow_html=True)
-    st.write("Admin: jubail.sanghoon@gmail.com") # 텍스트 볼드 해제
+    st.write("Admin: jubail.sanghoon@gmail.com")
 
-# --- 5. 메인 레이아웃 (여백 깎아내기 및 칼정렬) ---
+# --- 5. 메인 레이아웃 ---
 col1, col2, col3 = st.columns([1.1, 1.3, 0.9], gap="medium")
 
-# [섹션 1] Select Process (2x2 그리드 높이 60px)
+# [섹션 1] Select Process 
 with col1:
     st.markdown("<div class='master-label'>Select Process</div>", unsafe_allow_html=True)
     proc = st.radio("P", options=['SAW', 'FCAW', 'SMAW', 'GMAW'], label_visibility="collapsed")
     k = 1.0 if std_mode == 'AWS' or proc == 'SAW' else 0.8
 
-# [섹션 2] Input Parameters (1.5rem 통일 및 여백 밀착)
+# [섹션 2] Input Parameters (라벨과 박스 초밀착 타설)
 with col2:
     st.markdown("<div class='master-label'>Input Parameters</div>", unsafe_allow_html=True)
     
     def param_row(label, val, step, key):
         c_lbl, c_inp = st.columns([4.5, 5.5])
         with c_lbl:
-            st.markdown(f"<div class='master-label' style='margin-top:10px !important;'>{label}</div>", unsafe_allow_html=True)
+            # 라벨 박스를 입력창과 동일한 60px 높이로 만들고, 텍스트를 수직 중앙 정렬하여 완벽한 수평선 구축
+            st.markdown(f"<div class='master-label' style='display: flex; align-items: center; height: 60px; margin: 0 !important;'>{label}</div>", unsafe_allow_html=True)
         with c_inp:
             return st.number_input(label, value=val, step=step, format="%.1f", label_visibility="collapsed", key=key)
 
