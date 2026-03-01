@@ -37,11 +37,11 @@ st.markdown(f"""
         line-height: 1.2 !important;
     }}
 
-    /* [수정] 사이드바 '일반 라디오 버튼' 2줄 왼쪽 맞춤 */
+    /* 사이드바 '일반 라디오 버튼' 2줄 왼쪽 맞춤 */
     section[data-testid="stSidebar"] div[role="radiogroup"] {{
         display: flex !important;
-        flex-direction: column !important; /* 2줄(수직) 배치 */
-        align-items: flex-start !important; /* 왼쪽 맞춤 */
+        flex-direction: column !important; 
+        align-items: flex-start !important; 
         gap: 5px !important;
         margin-bottom: 15px !important;
     }}
@@ -52,7 +52,7 @@ st.markdown(f"""
         margin: 0 !important;
     }}
 
-    /* [유지] Select Process 2x2 박스 그리드, 높이 60px 고정 */
+    /* Select Process 2x2 박스 그리드, 높이 60px 고정 */
     div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] {{
         display: grid !important;
         grid-template-columns: repeat(2, 1fr) !important; 
@@ -68,60 +68,78 @@ st.markdown(f"""
         margin: 0 !important; padding: 0 !important;
     }}
     
-    /* [격리 시공] 메인 영역(Select Process) 라디오 버튼에만 박스 반전 효과 적용 */
-    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label p {{ 
+    /* 메인 영역(Select Process) 폰트 일치 */
+    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label * {{ 
         font-size: 1.5rem !important; font-weight: normal !important; margin: 0 !important; 
     }}
-    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label[data-checked="true"] {{ 
-        background-color: {color_line} !important; 
-    }}
-    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label[data-checked="true"] p {{ 
-        color: {color_white} !important; 
-    }}
+    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label[data-checked="true"] {{ background-color: {color_line} !important; }}
+    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label[data-checked="true"] * {{ color: {color_white} !important; }}
 
-    /* 입력창 컬럼 여백 제거 */
-    div[data-testid="column"]:nth-of-type(2) div[data-testid="stHorizontalBlock"] {{ gap: 0rem !important; }}
-    div[data-testid="column"]:nth-of-type(2) div[data-testid="stHorizontalBlock"] div[data-testid="column"] {{ padding: 0 !important; }}
-
-    /* 입력창 높이 60px 고정, (-)왼쪽 (+)오른쪽 배치 */
+    /* [핵심 공사] 모든 숫자 입력창 내부를 Flexbox Order로 강제 분리 (-) [입력] (+) */
     div[data-testid="stNumberInputContainer"] {{
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
         background-color: {color_white} !important; 
         border: 2px solid {color_line} !important;
         border-radius: 4px !important;
         height: 60px !important; 
-        display: flex !important;
-        justify-content: space-between !important; 
-        align-items: center !important;
         padding: 0 !important;
         margin-bottom: 0px !important;
-        margin-left: 5px !important; 
     }}
+    
+    /* 첫 번째 버튼(마이너스) 무조건 왼쪽 끝 */
+    div[data-testid="stNumberInputContainer"] > button:first-of-type {{
+        order: 1 !important;
+        min-width: 60px !important;
+        height: 100% !important;
+        font-size: 1.5rem !important; 
+        font-weight: normal !important;
+        color: {color_line} !important;
+        background-color: transparent !important;
+        border: none !important;
+    }}
+    
+    /* 입력창 무조건 가운데 꽉 채우기 */
+    div[data-testid="stNumberInputContainer"] > div, 
+    div[data-testid="stNumberInputContainer"] > input {{
+        order: 2 !important;
+        flex-grow: 1 !important;
+        text-align: center !important;
+    }}
+    
+    /* 숫자 폰트 크기 및 색상 */
     div[data-testid="stNumberInputContainer"] input {{
         color: {color_line} !important;
         font-size: 1.5rem !important; 
         font-weight: normal !important;
         text-align: center !important;
     }}
-    button[data-testid="baseButton-secondary"] {{
-        color: {color_line} !important;
+    
+    /* 두 번째 버튼(플러스) 무조건 오른쪽 끝 */
+    div[data-testid="stNumberInputContainer"] > button:last-of-type {{
+        order: 3 !important;
         min-width: 60px !important;
         height: 100% !important;
         font-size: 1.5rem !important; 
         font-weight: normal !important;
+        color: {color_line} !important;
         background-color: transparent !important;
         border: none !important;
     }}
 
+    /* 입력창 컬럼 여백 제거 (초밀착) */
+    div[data-testid="column"]:nth-of-type(2) div[data-testid="stHorizontalBlock"] {{ gap: 0rem !important; }}
+    div[data-testid="column"]:nth-of-type(2) div[data-testid="stHorizontalBlock"] div[data-testid="column"] {{ padding: 0 !important; }}
+
     /* 입력창 상하 여백 최소화 */
     .stNumberInput {{ margin-bottom: -10px !important; }}
     
-    /* [수정] WPS range 입력창 폭 축소 및 왼쪽 정렬 (사이드바 밸런스) */
-    section[data-testid="stSidebar"] div.stNumberInput {{ 
-        width: 70% !important; 
-        margin: 0 !important; /* 왼쪽 맞춤 */
-    }}
+    /* WPS range 입력창 폭 축소 및 왼쪽 정렬 */
+    section[data-testid="stSidebar"] div.stNumberInput {{ width: 75% !important; margin: 0 !important; }}
     
-    /* Live Result 박스 높이 고정 및 볼드 해제 */
+    /* Live Result 박스 높이 고정 */
     .result-value-box {{
         background-color: {color_white}; border: 3px solid {color_line};
         height: 75px !important; display: flex; align-items: center; justify-content: center;
@@ -134,6 +152,7 @@ st.markdown(f"""
         border: 2px solid {color_line}; color: {color_white}; border-radius: 4px;
     }}
     
+    /* 저장 버튼 */
     .save-btn-container button {{
         height: 60px !important; font-size: 1.5rem !important; font-weight: normal !important;
         border: 2px solid {color_line} !important; background-color: #E6E6E6 !important;
@@ -156,12 +175,11 @@ st.markdown('<div class="black-divider"></div>', unsafe_allow_html=True)
 
 # --- 4. 사이드바 ---
 with st.sidebar:
-    # 텍스트 좌측 정렬 (통일감)
     st.markdown("<div class='master-label'>Standard</div>", unsafe_allow_html=True)
-    # 수직(2줄) 배치 적용: horizontal=False
     std_mode = st.radio("Std", options=['ISO', 'AWS'], horizontal=False, label_visibility="collapsed")
     
     st.markdown("<br><div class='master-label'>WPS range</div>", unsafe_allow_html=True)
+    # WPS Range 입력창에도 이제 완벽하게 [-] [숫자] [+] 레이아웃이 적용됨
     w_min = st.number_input("Min", value=1.0, step=0.1, format="%.1f")
     w_max = st.number_input("Max", value=2.5, step=0.1, format="%.1f")
     
@@ -188,6 +206,7 @@ with col2:
         with c_inp:
             return st.number_input(label, value=val, step=step, format="%.1f", label_visibility="collapsed", key=key)
 
+    # 전압, 전류, 길이, 시간 모두 [-] 버튼 왼쪽, [+] 버튼 오른쪽으로 분리 적용됨
     v = param_row("Voltage (V)", 28.0, 0.5, "v_in")
     a = param_row("Amperage (A)", 220.0, 5.0, "a_in")
     l = param_row("Length (mm)", 150.0, 10.0, "l_in")
