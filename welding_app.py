@@ -7,32 +7,32 @@ st.set_page_config(page_title="Heat Input Master", layout="wide")
 
 color_bg = "#F2F2F2"
 color_white = "#FFFFFF"
-color_line = "#000000"
+color_line = "#000000"  # 검정색
 color_pass = "#28A745"
 color_fail = "#DC3545"
 
 if 'history' not in st.session_state: st.session_state.history = []
 
-# --- 2. CSS 초정밀 레이아웃 (60% 폭 & 모바일 가독성 최적화) ---
+# --- 2. CSS 정밀 레이아웃 (웹 동결 + 모바일 글자색 보정) ---
 st.markdown(f"""
     <style>
     /* 전체 배경 */
     .stApp {{ background-color: {color_bg}; color: {color_line}; }}
     
-    /* [마스터] 가변 폰트 시스템 */
+    /* [마스터] 가변 폰트 */
     .master-label {{
         font-size: clamp(1.1rem, 2.5vw, 1.5rem) !important;
         font-weight: normal !important;
         color: {color_line} !important;
         margin-bottom: 5px !important;
-        line-height: 1.2 !important;
     }}
 
-    /* --- [섹션 3] 입력창 폭 60% 및 좌우 버튼 1/2/3 고정 --- */
-    /* Input Parameters 컬럼 내의 입력창 너비 제한 */
-    div[data-testid="column"]:nth-of-type(2) .stNumberInput {{
-        width: 60% !important; 
-        min-width: 220px !important; /* 모바일에서 지나친 축소 방지 */
+    /* --- [섹션 3] 입력창 폭 60% 및 좌우 버튼 고정 (웹 전용 설정 유지) --- */
+    @media (min-width: 769px) {{
+        div[data-testid="column"]:nth-of-type(2) .stNumberInput {{
+            width: 60% !important; 
+            min-width: 220px !important;
+        }}
     }}
 
     div[data-testid="stNumberInputContainer"] {{
@@ -45,49 +45,53 @@ st.markdown(f"""
         overflow: hidden !important;
     }}
 
-    /* 1번: 마이너스(-) 버튼 강제 왼쪽 */
-    div[data-testid="stNumberInputContainer"] > button:first-of-type {{
-        order: -1 !important; min-width: 60px !important; height: 100% !important; 
-        font-size: 1.5rem !important; border-right: 1px solid #ddd !important;
-        background: transparent !important;
-    }}
-    /* 2번: 숫자창 (가운데) */
-    div[data-testid="stNumberInputContainer"] input {{
-        order: 2 !important; flex-grow: 1 !important; text-align: center !important; 
-        font-size: 1.5rem !important; font-weight: bold !important;
-        background: transparent !important; border: none !important;
-    }}
-    /* 3번: 플러스(+) 버튼 강제 오른쪽 */
-    div[data-testid="stNumberInputContainer"] > button:last-of-type {{
-        order: 99 !important; min-width: 60px !important; height: 100% !important; 
-        font-size: 1.5rem !important; border-left: 1px solid #ddd !important;
-        background: transparent !important;
-    }}
+    /* 버튼 및 숫자창 순서 고정 (1-2-3) */
+    div[data-testid="stNumberInputContainer"] > button:first-of-type {{ order: -1 !important; min-width: 60px !important; font-size: 1.5rem !important; background: transparent !important; color: {color_line} !important; }}
+    div[data-testid="stNumberInputContainer"] input {{ order: 2 !important; flex-grow: 1 !important; text-align: center !important; font-size: 1.5rem !important; font-weight: bold !important; color: {color_line} !important; }}
+    div[data-testid="stNumberInputContainer"] > button:last-of-type {{ order: 99 !important; min-width: 60px !important; font-size: 1.5rem !important; background: transparent !important; color: {color_line} !important; }}
 
-    /* [섹션 2] 공정 선택 버튼 글자 크기 동기화 */
-    div[role="radiogroup"] label p, div[role="radiogroup"] label span {{
+    /* --- [핵심 수정] 라디오 버튼 글자색 강제 검정색 (#000000) --- */
+    /* 모바일과 웹 공통으로 라디오 버튼 내부의 모든 텍스트를 검정색으로 고정 */
+    div[role="radiogroup"] label p, 
+    div[role="radiogroup"] label span,
+    div[role="radiogroup"] label div {{
+        color: {color_line} !important; /* 무조건 검정색 */
         font-size: clamp(1.1rem, 2.5vw, 1.5rem) !important;
+        opacity: 1 !important; /* 투명도 제거 */
     }}
 
-    /* 결과 박스 스타일 */
-    .result-value-box {{
-        background: {color_white}; border: 3px solid {color_line}; height: 80px; 
-        display: flex; align-items: center; justify-content: center; 
-        font-size: clamp(1.5rem, 4vw, 2.2rem); font-weight: bold; margin-bottom: 10px;
+    /* 공정 선택 버튼 배경 및 테두리 */
+    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label {{
+        height: 60px !important; 
+        border: 2px solid {color_line} !important;
+        background-color: {color_white} !important;
+        justify-content: center !important; align-items: center !important;
+    }}
+    
+    /* 선택된 버튼의 경우만 글자색 반전 (검정 배경에 흰 글씨) */
+    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label[data-checked="true"] {{ background-color: {color_line} !important; }}
+    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label[data-checked="true"] p,
+    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label[data-checked="true"] span {{
+        color: {color_white} !important; 
     }}
 
-    /* 📱 모바일 환경 전용 (Media Query) */
+    /* 📱 모바일 전용 보정 (화면 폭 768px 이하) */
     @media (max-width: 768px) {{
         div[data-testid="column"]:nth-of-type(2) .stNumberInput {{
-            width: 100% !important; /* 모바일은 가로폭 전체 활용 */
+            width: 100% !important; /* 모바일은 100% 폭 */
         }}
-        .title-text {{ font-size: 1.8rem !important; }}
         div[data-testid="stNumberInputContainer"] {{ height: 50px !important; }}
+        
+        /* 사이드바 라디오 버튼 텍스트가 안 보일 수 있으므로 재강조 */
+        section[data-testid="stSidebar"] div[role="radiogroup"] label p {{
+            color: {color_line} !important;
+            font-weight: bold !important;
+        }}
     }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. 헤더 영역 (상부 타이틀) ---
+# --- 3. 헤더 영역 ---
 logo_url = "https://raw.githubusercontent.com/jubailsanghoon/Heatinput/main/db65c0d39f36f2dddc248ea0bf2e4efc.jpg"
 st.markdown(f"""
     <div style="display: flex; align-items: center; border-bottom: 5px solid black; padding-bottom: 10px; margin-bottom: 25px;">
@@ -96,58 +100,186 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 4. 메인 레이아웃 (모듈형 3단 배치) ---
+# --- 4. 메인 레이아웃 ---
 col1, col2, col3 = st.columns([1.1, 1.3, 0.9], gap="large")
 
-# [섹션 1 & 2] 설정 및 공정 선택
 with col1:
-    with st.expander("🛠 Standard & WPS Range", expanded=True):
-        std_mode = st.radio("Standard", ['ISO', 'AWS'], horizontal=True)
-        w_min = st.number_input("WPS Min", 1.0, step=0.1, key="w_min")
-        w_max = st.number_input("WPS Max", 2.5, step=0.1, key="w_max")
+    with st.sidebar:
+        st.markdown("<div class='master-label'>Standard</div>", unsafe_allow_html=True)
+        std_mode = st.radio("Standard", ['ISO', 'AWS'], horizontal=False, label_visibility="collapsed")
+        st.markdown("<br><div class='master-label'>WPS range (kJ/mm)</div>", unsafe_allow_html=True)
+        w_min = st.number_input("Min", 1.0, step=0.1)
+        w_max = st.number_input("Max", 2.5, step=0.1)
     
-    st.markdown("<br><div class='master-label'>Select Process</div>", unsafe_allow_html=True)
+    st.markdown("<div class='master-label'>Select Process</div>", unsafe_allow_html=True)
     proc = st.radio("P", ['SAW', 'FCAW', 'SMAW', 'GMAW'], label_visibility="collapsed")
-    # 열 효율 계수 k 자동 적용
     k = 1.0 if std_mode == 'AWS' or proc == 'SAW' else 0.8
 
-# [섹션 3] Input Parameters (너비 60% 적용)
 with col2:
     st.markdown("<div class='master-label'>Input Parameters</div>", unsafe_allow_html=True)
     def param_input(label, val, step, key):
         st.markdown(f"<div class='master-label' style='margin-top:15px;'>{label}</div>", unsafe_allow_html=True)
         return st.number_input(label, value=val, step=step, format="%.1f", label_visibility="collapsed", key=key)
 
-    v = param_input("Voltage (V)", 28.0, 0.5, "v_val")
-    a = param_input("Amperage (A)", 220.0, 5.0, "a_val")
-    l = param_input("Length (mm)", 150.0, 10.0, "l_val")
-    t = param_input("Time (Sec)", 120.0, 1.0, "t_val")
+    v = param_input("Voltage (V)", 28.0, 0.5, "v")
+    a = param_input("Amperage (A)", 220.0, 5.0, "a")
+    l = param_input("Length (mm)", 150.0, 10.0, "l")
+    t = param_input("Time (Sec)", 120.0, 1.0, "t")
 
-# [섹션 4] Live Result & Data Save
 with col3:
     st.markdown("<div class='master-label'>Live Result</div>", unsafe_allow_html=True)
     hi = (k * v * a * t) / (l * 1000) if l > 0 else 0
     is_pass = w_min <= hi <= w_max
-    
-    st.markdown(f'<div class="result-value-box">{hi:.3f} kJ/mm</div>', unsafe_allow_html=True)
-    
-    st_bg = color_pass if is_pass else color_fail
-    st.markdown(f"""
-        <div style="background: {st_bg}; color: white; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: bold; border-radius: 4px; border: 2px solid black;">
-            {"PASS" if is_pass else "FAIL"}
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f'<div style="background:white; border:3px solid black; height:80px; display:flex; align-items:center; justify-content:center; font-size:2.2rem; font-weight:bold; margin-bottom:10px;">{hi:.3f} kJ/mm</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:{color_pass if is_pass else color_fail}; color:white; height:60px; display:flex; align-items:center; justify-content:center; font-size:1.8rem; font-weight:bold; border-radius:4px; border:2px solid black;">{"PASS" if is_pass else "FAIL"}</div>', unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("💾 SAVE LOG", use_container_width=True):
-        st.session_state.history.insert(0, {
-            "Time": datetime.now().strftime("%H:%M:%S"),
-            "Proc": proc, "V": v, "A": a, "L": l, "T": t, 
-            "HI": f"{hi:.3f}", "Status": "PASS" if is_pass else "FAIL"
-        })
-        st.toast("Data Saved!")
+        st.session_state.history.insert(0, {"Time": datetime.now().strftime("%H:%M:%S"), "Proc": proc, "V": v, "A": a, "L": l, "T": t, "HI": f"{hi:.3f}", "Status": "PASS" if is_pass else "FAIL"})
+        st.toast("Saved!")
 
-# --- 5. 데이터 로그 테이블 ---
+if st.session_state.history:
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.table(pd.DataFrame(st.session_state.history).head(10))import streamlit as st
+import pandas as pd
+from datetime import datetime
+
+# --- 1. 페이지 설정 및 테마 ---
+st.set_page_config(page_title="Heat Input Master", layout="wide")
+
+color_bg = "#F2F2F2"
+color_white = "#FFFFFF"
+color_line = "#000000"  # 검정색
+color_pass = "#28A745"
+color_fail = "#DC3545"
+
+if 'history' not in st.session_state: st.session_state.history = []
+
+# --- 2. CSS 정밀 레이아웃 (웹 동결 + 모바일 글자색 보정) ---
+st.markdown(f"""
+    <style>
+    /* 전체 배경 */
+    .stApp {{ background-color: {color_bg}; color: {color_line}; }}
+    
+    /* [마스터] 가변 폰트 */
+    .master-label {{
+        font-size: clamp(1.1rem, 2.5vw, 1.5rem) !important;
+        font-weight: normal !important;
+        color: {color_line} !important;
+        margin-bottom: 5px !important;
+    }}
+
+    /* --- [섹션 3] 입력창 폭 60% 및 좌우 버튼 고정 (웹 전용 설정 유지) --- */
+    @media (min-width: 769px) {{
+        div[data-testid="column"]:nth-of-type(2) .stNumberInput {{
+            width: 60% !important; 
+            min-width: 220px !important;
+        }}
+    }}
+
+    div[data-testid="stNumberInputContainer"] {{
+        display: flex !important;
+        flex-direction: row !important;
+        height: 60px !important;
+        background-color: {color_white} !important;
+        border: 2px solid {color_line} !important;
+        border-radius: 4px !important;
+        overflow: hidden !important;
+    }}
+
+    /* 버튼 및 숫자창 순서 고정 (1-2-3) */
+    div[data-testid="stNumberInputContainer"] > button:first-of-type {{ order: -1 !important; min-width: 60px !important; font-size: 1.5rem !important; background: transparent !important; color: {color_line} !important; }}
+    div[data-testid="stNumberInputContainer"] input {{ order: 2 !important; flex-grow: 1 !important; text-align: center !important; font-size: 1.5rem !important; font-weight: bold !important; color: {color_line} !important; }}
+    div[data-testid="stNumberInputContainer"] > button:last-of-type {{ order: 99 !important; min-width: 60px !important; font-size: 1.5rem !important; background: transparent !important; color: {color_line} !important; }}
+
+    /* --- [핵심 수정] 라디오 버튼 글자색 강제 검정색 (#000000) --- */
+    /* 모바일과 웹 공통으로 라디오 버튼 내부의 모든 텍스트를 검정색으로 고정 */
+    div[role="radiogroup"] label p, 
+    div[role="radiogroup"] label span,
+    div[role="radiogroup"] label div {{
+        color: {color_line} !important; /* 무조건 검정색 */
+        font-size: clamp(1.1rem, 2.5vw, 1.5rem) !important;
+        opacity: 1 !important; /* 투명도 제거 */
+    }}
+
+    /* 공정 선택 버튼 배경 및 테두리 */
+    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label {{
+        height: 60px !important; 
+        border: 2px solid {color_line} !important;
+        background-color: {color_white} !important;
+        justify-content: center !important; align-items: center !important;
+    }}
+    
+    /* 선택된 버튼의 경우만 글자색 반전 (검정 배경에 흰 글씨) */
+    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label[data-checked="true"] {{ background-color: {color_line} !important; }}
+    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label[data-checked="true"] p,
+    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label[data-checked="true"] span {{
+        color: {color_white} !important; 
+    }}
+
+    /* 📱 모바일 전용 보정 (화면 폭 768px 이하) */
+    @media (max-width: 768px) {{
+        div[data-testid="column"]:nth-of-type(2) .stNumberInput {{
+            width: 100% !important; /* 모바일은 100% 폭 */
+        }}
+        div[data-testid="stNumberInputContainer"] {{ height: 50px !important; }}
+        
+        /* 사이드바 라디오 버튼 텍스트가 안 보일 수 있으므로 재강조 */
+        section[data-testid="stSidebar"] div[role="radiogroup"] label p {{
+            color: {color_line} !important;
+            font-weight: bold !important;
+        }}
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- 3. 헤더 영역 ---
+logo_url = "https://raw.githubusercontent.com/jubailsanghoon/Heatinput/main/db65c0d39f36f2dddc248ea0bf2e4efc.jpg"
+st.markdown(f"""
+    <div style="display: flex; align-items: center; border-bottom: 5px solid black; padding-bottom: 10px; margin-bottom: 25px;">
+        <img src="{logo_url}" width="70">
+        <span class="title-text" style="font-size: 2.3rem; margin-left: 15px; font-weight: bold;">Heat Input Master</span>
+    </div>
+""", unsafe_allow_html=True)
+
+# --- 4. 메인 레이아웃 ---
+col1, col2, col3 = st.columns([1.1, 1.3, 0.9], gap="large")
+
+with col1:
+    with st.sidebar:
+        st.markdown("<div class='master-label'>Standard</div>", unsafe_allow_html=True)
+        std_mode = st.radio("Standard", ['ISO', 'AWS'], horizontal=False, label_visibility="collapsed")
+        st.markdown("<br><div class='master-label'>WPS range (kJ/mm)</div>", unsafe_allow_html=True)
+        w_min = st.number_input("Min", 1.0, step=0.1)
+        w_max = st.number_input("Max", 2.5, step=0.1)
+    
+    st.markdown("<div class='master-label'>Select Process</div>", unsafe_allow_html=True)
+    proc = st.radio("P", ['SAW', 'FCAW', 'SMAW', 'GMAW'], label_visibility="collapsed")
+    k = 1.0 if std_mode == 'AWS' or proc == 'SAW' else 0.8
+
+with col2:
+    st.markdown("<div class='master-label'>Input Parameters</div>", unsafe_allow_html=True)
+    def param_input(label, val, step, key):
+        st.markdown(f"<div class='master-label' style='margin-top:15px;'>{label}</div>", unsafe_allow_html=True)
+        return st.number_input(label, value=val, step=step, format="%.1f", label_visibility="collapsed", key=key)
+
+    v = param_input("Voltage (V)", 28.0, 0.5, "v")
+    a = param_input("Amperage (A)", 220.0, 5.0, "a")
+    l = param_input("Length (mm)", 150.0, 10.0, "l")
+    t = param_input("Time (Sec)", 120.0, 1.0, "t")
+
+with col3:
+    st.markdown("<div class='master-label'>Live Result</div>", unsafe_allow_html=True)
+    hi = (k * v * a * t) / (l * 1000) if l > 0 else 0
+    is_pass = w_min <= hi <= w_max
+    st.markdown(f'<div style="background:white; border:3px solid black; height:80px; display:flex; align-items:center; justify-content:center; font-size:2.2rem; font-weight:bold; margin-bottom:10px;">{hi:.3f} kJ/mm</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="background:{color_pass if is_pass else color_fail}; color:white; height:60px; display:flex; align-items:center; justify-content:center; font-size:1.8rem; font-weight:bold; border-radius:4px; border:2px solid black;">{"PASS" if is_pass else "FAIL"}</div>', unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("💾 SAVE LOG", use_container_width=True):
+        st.session_state.history.insert(0, {"Time": datetime.now().strftime("%H:%M:%S"), "Proc": proc, "V": v, "A": a, "L": l, "T": t, "HI": f"{hi:.3f}", "Status": "PASS" if is_pass else "FAIL"})
+        st.toast("Saved!")
+
 if st.session_state.history:
     st.markdown("<hr>", unsafe_allow_html=True)
     st.table(pd.DataFrame(st.session_state.history).head(10))
