@@ -37,15 +37,19 @@ st.markdown(f"""
         line-height: 1.2 !important;
     }}
 
-    /* [수정] 사이드바 '일반 라디오 버튼' 중앙 정렬 및 폰트 크기 유지 */
+    /* [수정] 사이드바 '일반 라디오 버튼' 2줄 왼쪽 맞춤 */
     section[data-testid="stSidebar"] div[role="radiogroup"] {{
-        justify-content: center !important; /* 가운데 정렬 */
+        display: flex !important;
+        flex-direction: column !important; /* 2줄(수직) 배치 */
+        align-items: flex-start !important; /* 왼쪽 맞춤 */
+        gap: 5px !important;
         margin-bottom: 15px !important;
     }}
     section[data-testid="stSidebar"] div[role="radiogroup"] label p {{
         font-size: 1.5rem !important;
         font-weight: normal !important;
         color: {color_line} !important;
+        margin: 0 !important;
     }}
 
     /* [유지] Select Process 2x2 박스 그리드, 높이 60px 고정 */
@@ -111,10 +115,10 @@ st.markdown(f"""
     /* 입력창 상하 여백 최소화 */
     .stNumberInput {{ margin-bottom: -10px !important; }}
     
-    /* WPS range 입력창 폭 축소 및 중앙 정렬 */
+    /* [수정] WPS range 입력창 폭 축소 및 왼쪽 정렬 (사이드바 밸런스) */
     section[data-testid="stSidebar"] div.stNumberInput {{ 
-        width: 65% !important; 
-        margin: 0 auto !important; /* 입력창 자체도 가운데 정렬 */
+        width: 70% !important; 
+        margin: 0 !important; /* 왼쪽 맞춤 */
     }}
     
     /* Live Result 박스 높이 고정 및 볼드 해제 */
@@ -152,17 +156,17 @@ st.markdown('<div class="black-divider"></div>', unsafe_allow_html=True)
 
 # --- 4. 사이드바 ---
 with st.sidebar:
-    # 텍스트 중앙 정렬
-    st.markdown("<div class='master-label' style='text-align: center;'>Standard</div>", unsafe_allow_html=True)
-    # 일반 라디오 버튼 적용 (CSS 박스 효과 제외됨)
-    std_mode = st.radio("Std", options=['ISO', 'AWS'], horizontal=True, label_visibility="collapsed")
+    # 텍스트 좌측 정렬 (통일감)
+    st.markdown("<div class='master-label'>Standard</div>", unsafe_allow_html=True)
+    # 수직(2줄) 배치 적용: horizontal=False
+    std_mode = st.radio("Std", options=['ISO', 'AWS'], horizontal=False, label_visibility="collapsed")
     
-    st.markdown("<br><div class='master-label' style='text-align: center;'>WPS range</div>", unsafe_allow_html=True)
+    st.markdown("<br><div class='master-label'>WPS range</div>", unsafe_allow_html=True)
     w_min = st.number_input("Min", value=1.0, step=0.1, format="%.1f")
     w_max = st.number_input("Max", value=2.5, step=0.1, format="%.1f")
     
     st.markdown("<br><hr style='margin:10px 0;'>", unsafe_allow_html=True)
-    st.markdown("<div style='text-align: center;'>Admin: jubail.sanghoon@gmail.com</div>", unsafe_allow_html=True)
+    st.markdown("<div>Admin: jubail.sanghoon@gmail.com</div>", unsafe_allow_html=True)
 
 # --- 5. 메인 레이아웃 ---
 col1, col2, col3 = st.columns([1.1, 1.3, 0.9], gap="medium")
