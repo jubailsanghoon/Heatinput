@@ -13,7 +13,7 @@ color_fail = "#DC3545"
 
 if 'history' not in st.session_state: st.session_state.history = []
 
-# --- 2. CSS 초정밀 레이아웃 주입 ---
+# --- 2. CSS 정밀 레이아웃 주입 ---
 st.markdown(f"""
     <style>
     /* 전체 배경 및 폰트 강제 고정 */
@@ -24,26 +24,26 @@ st.markdown(f"""
     .header-container {{ display: flex; align-items: center; padding-top: 0px; margin-bottom: 0px; }}
     .black-divider {{ border-bottom: 5px solid {color_line}; margin-top: 5px; margin-bottom: 20px; width: 100%; }}
     
-    /* 타이틀 텍스트 크기 고정 */
-    .title-text {{ font-size: 2.3rem; font-weight: 900; margin-left: 15px; color: {color_line}; }}
+    /* 타이틀 텍스트 크기 고정 및 볼드 해제 */
+    .title-text {{ font-size: 2.3rem; font-weight: normal; margin-left: 15px; color: {color_line}; }}
     
-    /* [핵심 1] 모든 라벨 및 텍스트 1.5rem 절대 고정 (Select Process 기준) */
+    /* [폰트] 모든 라벨 및 텍스트 1.5rem 고정 & 볼드 해제 (font-weight: normal) */
     .master-label {{
         font-size: 1.5rem !important;
-        font-weight: 900 !important;
+        font-weight: normal !important;
         color: {color_line} !important;
         margin: 0 0 10px 0 !important;
         padding: 0 !important;
         line-height: 1.2 !important;
     }}
 
-    /* [핵심 2] ISO/AWS 박스 폭 통일 (현재의 2배), 높이 60px 고정 */
+    /* ISO/AWS 박스 폭 통일, 높이 60px 고정 */
     section[data-testid="stSidebar"] div[role="radiogroup"] {{
         display: flex !important; width: 100% !important; gap: 10px !important; margin-bottom: 0px !important;
     }}
     section[data-testid="stSidebar"] div[role="radiogroup"] label {{
         flex: 1 1 50% !important; /* 폭 2배 꽉 채움 */
-        height: 60px !important;  /* 높이 고정 */
+        height: 60px !important;  
         border: 2px solid {color_line} !important;
         background-color: {color_white} !important;
         border-radius: 4px !important;
@@ -51,15 +51,15 @@ st.markdown(f"""
         margin: 0 !important; padding: 0 !important;
     }}
 
-    /* [핵심 3] Select Process 2x2 그리드, 높이 60px 고정 */
+    /* Select Process 2x2 그리드, 높이 60px 고정 */
     div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] {{
         display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important; /* 완벽한 2열 */
+        grid-template-columns: repeat(2, 1fr) !important;
         gap: 10px !important;
         margin-top: -5px !important;
     }}
     div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label {{
-        height: 60px !important; /* 박스 높이 고정 */
+        height: 60px !important;
         border: 2px solid {color_line} !important;
         background-color: {color_white} !important;
         border-radius: 4px !important;
@@ -67,61 +67,72 @@ st.markdown(f"""
         margin: 0 !important; padding: 0 !important;
     }}
     
-    /* 라디오 버튼 텍스트 통일 (1.5rem) 및 선택 반전 */
-    div[role="radiogroup"] label p {{ font-size: 1.5rem !important; font-weight: 900 !important; margin: 0 !important; }}
+    /* 라디오 버튼 텍스트 볼드 해제 및 선택 반전 */
+    div[role="radiogroup"] label p {{ font-size: 1.5rem !important; font-weight: normal !important; margin: 0 !important; }}
     div[role="radiogroup"] label[data-checked="true"] {{ background-color: {color_line} !important; }}
     div[role="radiogroup"] label[data-checked="true"] p {{ color: {color_white} !important; }}
 
-    /* [핵심 4] 입력창 높이 60px 고정, (-)왼쪽 (+)오른쪽 배치 */
+    /* 입력창 높이 60px 고정, (-)왼쪽 (+)오른쪽 배치 */
     div[data-testid="stNumberInputContainer"] {{
         background-color: {color_white} !important; 
         border: 2px solid {color_line} !important;
         border-radius: 4px !important;
-        height: 60px !important; /* 높이 고정 */
+        height: 60px !important; 
         display: flex !important;
-        justify-content: space-between !important; /* 버튼 양 끝 배치 */
+        justify-content: space-between !important;
         align-items: center !important;
         padding: 0 !important;
         margin-bottom: 0px !important;
     }}
+    
+    /* 입력창 숫자 볼드 해제 */
     div[data-testid="stNumberInputContainer"] input {{
         color: {color_line} !important;
-        font-size: 1.5rem !important; /* 입력 숫자 크기 통일 */
-        font-weight: 900 !important;
+        font-size: 1.5rem !important; 
+        font-weight: normal !important;
         text-align: center !important;
     }}
+    
+    /* +,- 버튼 볼드 해제 */
     button[data-testid="baseButton-secondary"] {{
         color: {color_line} !important;
         min-width: 60px !important;
         height: 100% !important;
-        font-size: 1.5rem !important; /* +,- 크기 통일 */
+        font-size: 1.5rem !important; 
+        font-weight: normal !important;
         background-color: transparent !important;
         border: none !important;
     }}
 
-    /* 입력창 여백 최소화 (Voltage 등) */
+    /* 입력창 여백 최소화 */
     .stNumberInput {{ margin-bottom: -10px !important; }}
     
-    /* [핵심 5] Live Result 박스 높이 고정 */
+    /* [요청] WPS range 입력창 폭 축소 (Standard 박스와 유사한 비율로 조절) */
+    section[data-testid="stSidebar"] div.stNumberInput {{
+        width: 65% !important; 
+    }}
+    
+    /* Live Result 박스 높이 고정 및 볼드 해제 */
     .result-value-box {{
         background-color: {color_white};
         border: 3px solid {color_line};
         height: 75px !important;
         display: flex; align-items: center; justify-content: center;
-        font-size: 2.2rem; font-weight: 900; margin-bottom: 10px; border-radius: 4px;
+        font-size: 2.2rem; font-weight: normal; margin-bottom: 10px; border-radius: 4px;
         margin-top: -5px;
     }}
     .result-status-box {{
         height: 60px !important;
         display: flex; align-items: center; justify-content: center;
-        font-size: 1.8rem; font-weight: 900; 
+        font-size: 1.8rem; font-weight: normal; 
         border: 2px solid {color_line}; color: {color_white}; border-radius: 4px;
     }}
     
+    /* 저장 버튼 볼드 해제 */
     .save-btn-container button {{
         height: 60px !important;
         font-size: 1.5rem !important;
-        font-weight: 900 !important;
+        font-weight: normal !important;
         border: 2px solid {color_line} !important;
         background-color: #E6E6E6 !important;
         color: {color_line} !important;
@@ -143,17 +154,18 @@ with c_title:
 st.markdown('</div>', unsafe_allow_html=True)
 st.markdown('<div class="black-divider"></div>', unsafe_allow_html=True)
 
-# --- 4. 사이드바 (여백 최소화 및 폭 100%) ---
+# --- 4. 사이드바 (WPS 폭 축소 적용) ---
 with st.sidebar:
     st.markdown("<div class='master-label'>Standard</div>", unsafe_allow_html=True)
     std_mode = st.radio("Std", options=['ISO', 'AWS'], horizontal=True, label_visibility="collapsed")
     
     st.markdown("<br><div class='master-label'>WPS range</div>", unsafe_allow_html=True)
+    # CSS width: 65% 적용됨
     w_min = st.number_input("Min", value=1.0, step=0.1, format="%.1f")
     w_max = st.number_input("Max", value=2.5, step=0.1, format="%.1f")
     
     st.markdown("<br><hr style='margin:10px 0;'>", unsafe_allow_html=True)
-    st.write("**Admin:** jubail.sanghoon@gmail.com")
+    st.write("Admin: jubail.sanghoon@gmail.com") # 텍스트 볼드 해제
 
 # --- 5. 메인 레이아웃 (여백 깎아내기 및 칼정렬) ---
 col1, col2, col3 = st.columns([1.1, 1.3, 0.9], gap="medium")
@@ -171,7 +183,6 @@ with col2:
     def param_row(label, val, step, key):
         c_lbl, c_inp = st.columns([4.5, 5.5])
         with c_lbl:
-            # 여백을 제거하고 입력창과 중앙 정렬되도록 margin-top 정밀 튜닝
             st.markdown(f"<div class='master-label' style='margin-top:10px !important;'>{label}</div>", unsafe_allow_html=True)
         with c_inp:
             return st.number_input(label, value=val, step=step, format="%.1f", label_visibility="collapsed", key=key)
