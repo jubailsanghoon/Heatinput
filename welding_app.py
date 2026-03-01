@@ -37,21 +37,18 @@ st.markdown(f"""
         line-height: 1.2 !important;
     }}
 
-    /* ISO/AWS 박스 폭 통일, 높이 60px 고정 */
+    /* [수정] 사이드바 '일반 라디오 버튼' 중앙 정렬 및 폰트 크기 유지 */
     section[data-testid="stSidebar"] div[role="radiogroup"] {{
-        display: flex !important; width: 100% !important; gap: 10px !important; margin-bottom: 0px !important;
+        justify-content: center !important; /* 가운데 정렬 */
+        margin-bottom: 15px !important;
     }}
-    section[data-testid="stSidebar"] div[role="radiogroup"] label {{
-        flex: 1 1 50% !important; 
-        height: 60px !important;  
-        border: 2px solid {color_line} !important;
-        background-color: {color_white} !important;
-        border-radius: 4px !important;
-        justify-content: center !important;
-        margin: 0 !important; padding: 0 !important;
+    section[data-testid="stSidebar"] div[role="radiogroup"] label p {{
+        font-size: 1.5rem !important;
+        font-weight: normal !important;
+        color: {color_line} !important;
     }}
 
-    /* Select Process 2x2 그리드, 높이 60px 고정 */
+    /* [유지] Select Process 2x2 박스 그리드, 높이 60px 고정 */
     div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] {{
         display: grid !important;
         grid-template-columns: repeat(2, 1fr) !important; 
@@ -67,18 +64,20 @@ st.markdown(f"""
         margin: 0 !important; padding: 0 !important;
     }}
     
-    /* 라디오 버튼 텍스트 통일 (1.5rem) 및 선택 반전 */
-    div[role="radiogroup"] label p {{ font-size: 1.5rem !important; font-weight: normal !important; margin: 0 !important; }}
-    div[role="radiogroup"] label[data-checked="true"] {{ background-color: {color_line} !important; }}
-    div[role="radiogroup"] label[data-checked="true"] p {{ color: {color_white} !important; }}
+    /* [격리 시공] 메인 영역(Select Process) 라디오 버튼에만 박스 반전 효과 적용 */
+    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label p {{ 
+        font-size: 1.5rem !important; font-weight: normal !important; margin: 0 !important; 
+    }}
+    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label[data-checked="true"] {{ 
+        background-color: {color_line} !important; 
+    }}
+    div[data-testid="column"]:nth-of-type(1) div[role="radiogroup"] label[data-checked="true"] p {{ 
+        color: {color_white} !important; 
+    }}
 
-    /* [초정밀 공사] Voltage 등 라벨과 입력창 사이의 여백(Gap/Padding) 완전 제거 */
-    div[data-testid="column"]:nth-of-type(2) div[data-testid="stHorizontalBlock"] {{
-        gap: 0rem !important; /* 기본 컬럼 틈새 강제 삭제 */
-    }}
-    div[data-testid="column"]:nth-of-type(2) div[data-testid="stHorizontalBlock"] div[data-testid="column"] {{
-        padding: 0 !important; /* 기본 패딩 강제 삭제 */
-    }}
+    /* 입력창 컬럼 여백 제거 */
+    div[data-testid="column"]:nth-of-type(2) div[data-testid="stHorizontalBlock"] {{ gap: 0rem !important; }}
+    div[data-testid="column"]:nth-of-type(2) div[data-testid="stHorizontalBlock"] div[data-testid="column"] {{ padding: 0 !important; }}
 
     /* 입력창 높이 60px 고정, (-)왼쪽 (+)오른쪽 배치 */
     div[data-testid="stNumberInputContainer"] {{
@@ -91,7 +90,7 @@ st.markdown(f"""
         align-items: center !important;
         padding: 0 !important;
         margin-bottom: 0px !important;
-        margin-left: 5px !important; /* 라벨 텍스트와 겹치지 않게 숨쉴 틈 5px만 부여 */
+        margin-left: 5px !important; 
     }}
     div[data-testid="stNumberInputContainer"] input {{
         color: {color_line} !important;
@@ -112,8 +111,11 @@ st.markdown(f"""
     /* 입력창 상하 여백 최소화 */
     .stNumberInput {{ margin-bottom: -10px !important; }}
     
-    /* WPS range 입력창 폭 축소 */
-    section[data-testid="stSidebar"] div.stNumberInput {{ width: 65% !important; }}
+    /* WPS range 입력창 폭 축소 및 중앙 정렬 */
+    section[data-testid="stSidebar"] div.stNumberInput {{ 
+        width: 65% !important; 
+        margin: 0 auto !important; /* 입력창 자체도 가운데 정렬 */
+    }}
     
     /* Live Result 박스 높이 고정 및 볼드 해제 */
     .result-value-box {{
@@ -150,15 +152,17 @@ st.markdown('<div class="black-divider"></div>', unsafe_allow_html=True)
 
 # --- 4. 사이드바 ---
 with st.sidebar:
-    st.markdown("<div class='master-label'>Standard</div>", unsafe_allow_html=True)
+    # 텍스트 중앙 정렬
+    st.markdown("<div class='master-label' style='text-align: center;'>Standard</div>", unsafe_allow_html=True)
+    # 일반 라디오 버튼 적용 (CSS 박스 효과 제외됨)
     std_mode = st.radio("Std", options=['ISO', 'AWS'], horizontal=True, label_visibility="collapsed")
     
-    st.markdown("<br><div class='master-label'>WPS range</div>", unsafe_allow_html=True)
+    st.markdown("<br><div class='master-label' style='text-align: center;'>WPS range</div>", unsafe_allow_html=True)
     w_min = st.number_input("Min", value=1.0, step=0.1, format="%.1f")
     w_max = st.number_input("Max", value=2.5, step=0.1, format="%.1f")
     
     st.markdown("<br><hr style='margin:10px 0;'>", unsafe_allow_html=True)
-    st.write("Admin: jubail.sanghoon@gmail.com")
+    st.markdown("<div style='text-align: center;'>Admin: jubail.sanghoon@gmail.com</div>", unsafe_allow_html=True)
 
 # --- 5. 메인 레이아웃 ---
 col1, col2, col3 = st.columns([1.1, 1.3, 0.9], gap="medium")
@@ -169,14 +173,13 @@ with col1:
     proc = st.radio("P", options=['SAW', 'FCAW', 'SMAW', 'GMAW'], label_visibility="collapsed")
     k = 1.0 if std_mode == 'AWS' or proc == 'SAW' else 0.8
 
-# [섹션 2] Input Parameters (라벨과 박스 초밀착 타설)
+# [섹션 2] Input Parameters (라벨과 박스 초밀착)
 with col2:
     st.markdown("<div class='master-label'>Input Parameters</div>", unsafe_allow_html=True)
     
     def param_row(label, val, step, key):
         c_lbl, c_inp = st.columns([4.5, 5.5])
         with c_lbl:
-            # 라벨 박스를 입력창과 동일한 60px 높이로 만들고, 텍스트를 수직 중앙 정렬하여 완벽한 수평선 구축
             st.markdown(f"<div class='master-label' style='display: flex; align-items: center; height: 60px; margin: 0 !important;'>{label}</div>", unsafe_allow_html=True)
         with c_inp:
             return st.number_input(label, value=val, step=step, format="%.1f", label_visibility="collapsed", key=key)
