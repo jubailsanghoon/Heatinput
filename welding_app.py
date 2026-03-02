@@ -6,7 +6,7 @@ from datetime import datetime
 st.set_page_config(layout="centered", page_title="Heat Input Master")
 
 # ======================================================
-# CSS - 버튼 사이즈 일원화 및 정밀 간격 제어
+# CSS - 버튼 사이즈 강제 일원화 및 간격 제어
 # ======================================================
 st.markdown("""
 <style>
@@ -27,8 +27,8 @@ st.markdown("""
     .pass { background:#00cc44; color:white; }
     .fail { background:#ff7f00; color:white; }
 
-    /* Save Data & Export 버튼 사이즈 완벽 일치화 */
-    /* 일반 버튼과 다운로드 버튼의 컨테이너를 모두 제어 */
+    /* ★중요: Save Data와 Export 버튼 크기를 소수점까지 일치시키는 핵심 CSS★ */
+    .stButton, .stDownloadButton { width: 100% !important; }
     .stButton > button, .stDownloadButton > button {
         width: 100% !important;
         height: 72px !important;
@@ -43,16 +43,13 @@ st.markdown("""
         align-items: center !important;
         justify-content: center !important;
     }
-    
     .stButton > button:hover, .stDownloadButton > button:hover {
         background-color: #CCCCCC !important;
         border-color: #000000 !important;
     }
 
-    /* 수평 정렬 보정 */
-    div[data-testid="stHorizontalBlock"] {
-        align-items: center;
-    }
+    /* 수평 중앙 정렬 */
+    div[data-testid="stHorizontalBlock"] { align-items: center; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -84,10 +81,10 @@ with c_prc:
     process = st.radio("Prc", ["SAW","FCAW","SMAW","GMAW"], horizontal=True, label_visibility="collapsed")
 
 # ======================================================
-# 2️⃣ WPS Range (항목-입력창 여백 최소화)
+# 2️⃣ WPS Range (여백 최소화 레이아웃)
 # ======================================================
 st.markdown('<div class="section-title">WPS Range (kJ/mm)</div>', unsafe_allow_html=True)
-# 비율: [Min(0.4), 여백(0.05), 입력창(1.8), 여백(0.5), Max(0.4), 여백(0.05), 입력창(1.8), 우측남는공간(1.2)]
+# [Min.](0.4) + [5%여백](0.05) + [입력창](1.8) + [10%여백](0.5) + [Max.](0.4) + [5%여백](0.05) + [입력창](1.8)
 w_cols = st.columns([0.4, 0.05, 1.8, 0.5, 0.4, 0.05, 1.8, 1.2])
 
 with w_cols[0]: st.markdown("**Min.**")
@@ -96,17 +93,15 @@ with w_cols[4]: st.markdown("**Max.**")
 with w_cols[6]: max_range = st.number_input("max", value=2.50, step=0.01, format="%.2f", label_visibility="collapsed")
 
 # ======================================================
-# 3️⃣ Input & Result Section
+# 3️⃣ Input & Result Section (여백 최소화 적용)
 # ======================================================
 st.write("") 
 col_left, col_space, col_right = st.columns([5, 0.8, 4.2])
 
 with col_left:
     st.markdown('<div class="section-title">Input Parameters</div>', unsafe_allow_html=True)
-    
-    # 항목과 입력창 사이 여백 최소화 함수
     def draw_input_row(label, value, key):
-        # [항목명, 여백5%, 입력창] -> 비율 조정으로 여백 최소화
+        # 항목명(1.5) + 5%여백(0.05) + 입력창(2)
         r_cols = st.columns([1.5, 0.05, 2])
         with r_cols[0]: st.markdown(f"**{label}**")
         with r_cols[2]: return st.number_input(label, value=value, step=0.1, format="%.1f", key=key, label_visibility="collapsed")
@@ -116,7 +111,6 @@ with col_left:
     length  = draw_input_row("Length (mm)", 5.0, "l")
     time    = draw_input_row("Time (sec)", 1.0, "t")
 
-# 계산 로직
 k = 1.0 if standard == "AWS" else {"SAW": 1.0, "GMAW": 0.8, "FCAW": 0.8, "SMAW": 0.8}.get(process, 0.8)
 HI = (k * voltage * current * time) / (length * 1000) if length > 0 else 0
 status = "PASS" if min_range <= HI <= max_range else "FAIL"
@@ -127,43 +121,31 @@ with col_right:
     st.markdown(f'<div class="{status.lower()}">{status}</div>', unsafe_allow_html=True)
 
 # ======================================================
-# 4️⃣ 별도의 버튼 구역 (PASS 박스 기준 45% : 5% : 45% 오른쪽 맞춤)
+# 4️⃣ 별도 버튼 구역 (45:5:45 오른쪽 맞춤 고정)
 # ======================================================
-# PASS 박스가 있는 col_right 구역 아래에 정렬
 btn_row_left, btn_row_space, btn_row_right = st.columns([5, 0.8, 4.2])
 
 with btn_row_right:
-    # 45% : 5% : 45% 비율을 만들기 위해 총합 10을 기준으로 분할
-    # 오른쪽 맞춤을 위해 남는 5%를 왼쪽에 spacer로 배치: [0.5, 4.5, 0.5, 4.5]
-    b_spacer, b1, b_gap, b2 = st.columns([0.5, 4.5, 0.5, 4.5])
+    # 4.2 너비 내에서: 여백(5%) + Save(45%) + 여백(5%) + Export(45%) = 총합 100%
+    # 비율: [0.5, 4.5, 0.5, 4.5]
+    b_cols = st.columns([0.5, 4.5, 0.5, 4.5])
     
-    with b1:
+    with b_cols[1]:
         if st.button("Save Data"):
-            new_entry = {
-                "Time": datetime.now().strftime("%H:%M:%S"),
-                "Std": standard, "Process": process,
-                "HI": round(HI, 3), "Result": status,
-                "V": voltage, "A": current, "L": length, "T": time
-            }
+            new_entry = {"Time": datetime.now().strftime("%H:%M:%S"), "Std": standard, "Process": process, "HI": round(HI, 3), "Result": status, "V": voltage, "A": current, "L": length, "T": time}
             st.session_state.history.insert(0, new_entry)
             if len(st.session_state.history) > 50: st.session_state.history.pop()
             st.rerun()
 
-    with b2:
+    with b_cols[3]:
         if st.session_state.history:
-            df = pd.DataFrame(st.session_state.history)
-            csv = df.to_csv(index=False).encode('utf-8-sig')
-            st.download_button(
-                label="Export", 
-                data=csv, 
-                file_name=f"HeatInput_{datetime.now().strftime('%m%d_%H%M')}.csv", 
-                mime="text/csv"
-            )
+            csv = pd.DataFrame(st.session_state.history).to_csv(index=False).encode('utf-8-sig')
+            st.download_button(label="Export", data=csv, file_name=f"HeatInput_{datetime.now().strftime('%m%d_%H%M')}.csv", mime="text/csv")
         else:
             st.button("Export", disabled=True)
 
 # ======================================================
-# 5️⃣ History Table
+# 5️⃣ 히스토리 테이블
 # ======================================================
 if st.session_state.history:
     st.markdown('<div class="section-title">Recent History (Max 50)</div>', unsafe_allow_html=True)
