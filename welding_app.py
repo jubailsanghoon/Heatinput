@@ -3,7 +3,7 @@ import streamlit as st
 st.set_page_config(layout="centered")
 
 # ---------------------------
-# CSS (Field Spec Final)
+# CSS
 # ---------------------------
 st.markdown("""
 <style>
@@ -14,6 +14,7 @@ body { background-color:#F2F2F2; }
     margin:auto;
 }
 
+/* Header */
 .header {
     display:flex;
     align-items:center;
@@ -21,17 +22,8 @@ body { background-color:#F2F2F2; }
     padding-bottom:10px;
     margin-bottom:15px;
 }
-
-.header img {
-    height:50px;
-    margin-right:10px;
-}
-
-.title {
-    font-size:28px;
-    font-weight:900;
-    color:black;
-}
+.header img { height:50px; margin-right:10px; }
+.title { font-size:28px; font-weight:900; }
 
 .section-title {
     font-size:20px;
@@ -39,67 +31,83 @@ body { background-color:#F2F2F2; }
     margin-top:20px;
 }
 
-/* ---------- Radio Layout ---------- */
+/* ---------------- Standard ---------------- */
 
-div[role="radiogroup"] {
+.standard-wrapper { margin-top:10px; }
+.standard-row {
     display:flex;
-    gap:10px;
+    align-items:center;
 }
+.standard-left { width:10%; }
+.standard-btn { width:35%; }
+.standard-gap { width:10%; }
 
-div[role="radiogroup"] label {
-    flex:1;
+.standard-btn button {
+    width:100%;
     border:3px solid black;
-    padding:18px 0;
-    text-align:center;
     font-weight:900;
-    font-size:20px;
+    padding:8px 0;
     background:white;
-    cursor:pointer;
 }
 
-div[role="radiogroup"] input {
-    display:none;
-}
-
-div[role="radiogroup"] input:checked + div {
-    background-color:#ff7f00 !important;
+.standard-btn button.selected {
+    background:#ff7f00 !important;
     color:white !important;
 }
 
-/* ---------- Result ---------- */
+/* ---------------- Process ---------------- */
+
+.process-wrapper { margin:5% 0; }
+.process-row {
+    display:flex;
+    align-items:center;
+}
+.process-left { width:10%; }
+.process-btn { width:35%; }
+.process-gap { width:10%; }
+
+.process-btn button {
+    width:100%;
+    border:3px solid black;
+    font-weight:900;
+    padding:8px 0;
+    background:white;
+}
+
+.process-btn button.selected {
+    background:#ff7f00 !important;
+    color:white !important;
+}
+
+/* ---------------- Input Width ---------------- */
+
+.wps-row input { width:30% !important; }
+.param-row input { width:40% !important; }
+
+/* ---------------- Result ---------------- */
 
 .result-box {
     font-size:26px;
     font-weight:900;
     padding:15px;
     background:#ffe5cc;
-    text-align:center;
     border:3px solid black;
     width:75%;
-    margin:auto;
+    text-align:left;
 }
 
-/* ---------- PASS / FAIL ---------- */
-
-.pass {
-    background-color:#00cc44;
-    color:white;
-    padding:12px;
+.pass, .fail {
+    font-size:26px;
     font-weight:900;
-    text-align:center;
-    width:70%;
-    margin:25px auto 0 auto;
+    padding:15px;
+    border:3px solid black;
+    width:75%;
+    text-align:left;
+    margin-top:10px;
 }
 
-.fail {
-    background-color:#ff7f00;
-    color:white;
-    padding:12px;
-    font-weight:900;
-    text-align:center;
-    width:70%;
-    margin:25px auto 0 auto;
-}
+.pass { background:#00cc44; color:white; }
+.fail { background:#ff7f00; color:white; }
 
 </style>
 """, unsafe_allow_html=True)
@@ -117,7 +125,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------
-# Session 초기화
+# Session Init
 # ---------------------------
 defaults = {
     "standard": "ISO",
@@ -134,16 +142,22 @@ for k, v in defaults.items():
         st.session_state[k] = v
 
 # ---------------------------
-# Standard Selection (Radio)
+# Standard Selection
 # ---------------------------
 st.markdown('<div class="section-title">Standard Selection</div>', unsafe_allow_html=True)
+st.markdown('<div class="standard-wrapper">', unsafe_allow_html=True)
 
-st.session_state.standard = st.radio(
-    "",
-    ["ISO", "AWS"],
-    horizontal=True,
-    index=["ISO","AWS"].index(st.session_state.standard)
-)
+col1, colgap, col2 = st.columns([3.5,1,3.5])
+
+with col1:
+    if st.button("AWS", use_container_width=True):
+        st.session_state.standard = "AWS"
+
+with col2:
+    if st.button("ISO", use_container_width=True):
+        st.session_state.standard = "ISO"
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------------------
 # WPS Range
@@ -155,16 +169,25 @@ st.session_state.min = c1.number_input("Min", value=st.session_state.min)
 st.session_state.max = c2.number_input("Max", value=st.session_state.max)
 
 # ---------------------------
-# Process Selection (Radio)
+# Process Selection
 # ---------------------------
 st.markdown('<div class="section-title">Select Process</div>', unsafe_allow_html=True)
 
-st.session_state.process = st.radio(
-    "",
-    ["SAW", "FCAW", "SMAW", "GMAW"],
-    horizontal=True,
-    index=["SAW","FCAW","SMAW","GMAW"].index(st.session_state.process)
-)
+p1_left, p1_gap, p1_right = st.columns([3.5,1,3.5])
+with p1_left:
+    if st.button("SAW", use_container_width=True):
+        st.session_state.process = "SAW"
+with p1_right:
+    if st.button("FCAW", use_container_width=True):
+        st.session_state.process = "FCAW"
+
+p2_left, p2_gap, p2_right = st.columns([3.5,1,3.5])
+with p2_left:
+    if st.button("SMAW", use_container_width=True):
+        st.session_state.process = "SMAW"
+with p2_right:
+    if st.button("GMAW", use_container_width=True):
+        st.session_state.process = "GMAW"
 
 # ---------------------------
 # Input Parameters
@@ -177,7 +200,7 @@ st.session_state.travel  = st.number_input("Travel Speed (mm)", value=st.session
 st.session_state.time    = st.number_input("Time (sec)", value=st.session_state.time)
 
 # ---------------------------
-# Calculation Logic
+# Calculation
 # ---------------------------
 if st.session_state.standard == "AWS":
     k = 1.0
