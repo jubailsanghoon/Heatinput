@@ -10,7 +10,7 @@ st.markdown("""
 body { background-color:#F2F2F2; }
 
 .main-container {
-    max-width:520px;
+    max-width:650px;
     margin:auto;
 }
 
@@ -27,16 +27,33 @@ body { background-color:#F2F2F2; }
 
 /* Section */
 .section-title {
-    font-size:20px;
+    font-size:18px;
     font-weight:900;
-    margin-top:25px;
-    margin-bottom:10px;
+    margin-top:15px;
+    margin-bottom:5px;
 }
 
-/* Radio Selected Color */
+/* Radio Selected */
 input[type="radio"]:checked + div {
     background:#ff7f00 !important;
     color:white !important;
+}
+
+/* Inline Row */
+.inline-row {
+    display:flex;
+    align-items:center;
+    gap:3%;
+    margin-bottom:8px;
+}
+
+.label {
+    width:35%;
+    font-weight:900;
+}
+
+.input-box {
+    width:25%;
 }
 
 /* Result */
@@ -77,96 +94,77 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ======================================================
-# 1️⃣ Standard Selection
+# 1️⃣ Standard + Process (가로 배치)
 # ======================================================
-st.markdown('<div class="section-title">Standard Selection</div>', unsafe_allow_html=True)
+left, space, right = st.columns([4,1,5])
 
-standard = st.radio(
-    "",
-    ["AWS", "ISO"],
-    horizontal=True,
-    key="standard_radio"
-)
+with left:
+    st.markdown('<div class="section-title">Standard Selection</div>', unsafe_allow_html=True)
+    standard = st.radio("", ["AWS","ISO"], horizontal=True, key="std")
+
+with right:
+    st.markdown('<div class="section-title">Select Process</div>', unsafe_allow_html=True)
+    process = st.radio("", ["SAW","FCAW","SMAW","GMAW"],
+                       horizontal=True, key="proc")
 
 # ======================================================
-# 2️⃣ WPS Range (kJ/mm)  🔥 수정 부분
+# 2️⃣ WPS Range 한 줄 정렬
 # ======================================================
 st.markdown('<div class="section-title">WPS Range (kJ/mm)</div>', unsafe_allow_html=True)
 
-wps_col1, wps_gap, wps_col2 = st.columns([0.47,0.06,0.47])
+col1, col2, col3, col4 = st.columns([1,2,1,2])
 
-with wps_col1:
-    label1, gap1, input1 = st.columns([0.47,0.03,0.50])
-    with label1:
-        st.markdown("**Min.**")
-    with input1:
-        min_range = st.number_input(
-            "",
-            step=0.01,
-            format="%.2f",
-            value=1.00,
-            key="min"
-        )
-
-with wps_col2:
-    label2, gap2, input2 = st.columns([0.47,0.03,0.50])
-    with label2:
-        st.markdown("**Max.**")
-    with input2:
-        max_range = st.number_input(
-            "",
-            step=0.01,
-            format="%.2f",
-            value=2.50,
-            key="max"
-        )
+with col1:
+    st.markdown("**Min.**")
+with col2:
+    min_range = st.number_input("", step=0.01, format="%.2f",
+                                value=0.96, key="min")
+with col3:
+    st.markdown("**Max.**")
+with col4:
+    max_range = st.number_input("", step=0.01, format="%.2f",
+                                value=2.50, key="max")
 
 # ======================================================
-# 3️⃣ Select Process
+# 3️⃣ Input + Result
 # ======================================================
-st.markdown('<div class="section-title">Select Process</div>', unsafe_allow_html=True)
-
-process = st.radio(
-    "",
-    ["SAW", "FCAW", "SMAW", "GMAW"],
-    horizontal=True,
-    key="process_radio"
-)
-
-# ======================================================
-# 4️⃣ Input + Result
-# ======================================================
-left, gap, right = st.columns([4,0.5,4])
+left, gap, right = st.columns([5,1,4])
 
 with left:
     st.markdown('<div class="section-title">Input Parameters</div>', unsafe_allow_html=True)
 
-    def input_row(label, key):
-        col1, col_gap, col2 = st.columns([0.37,0.03,0.60])
-        with col1:
+    def input_row(label, key, default):
+        c1, c2 = st.columns([3,2])
+        with c1:
             st.markdown(f"**{label}**")
-        with col2:
-            return st.number_input("", step=0.1, format="%.1f", key=key)
+        with c2:
+            return st.number_input("", step=0.1,
+                                   format="%.1f",
+                                   value=default,
+                                   key=key)
 
-    voltage = input_row("Voltage (V)", "v")
-    current = input_row("Current (A)", "c")
-    travel  = input_row("Travel Speed (mm)", "t")
-    time    = input_row("Time (sec)", "time")
+    voltage = input_row("Voltage (V)", "v", 30.0)
+    current = input_row("Current (A)", "c", 300.0)
+    length  = input_row("Length (mm)", "l", 5.0)
+    time    = input_row("Time (sec)", "t", 1.0)
 
 # ======================================================
 # Calculation
 # ======================================================
 k = 1.0 if standard == "AWS" else (1.0 if process=="SAW" else 0.8)
-HI = (k * voltage * current * time) / (travel * 1000) if travel != 0 else 0
+HI = (k * voltage * current * time) / (length * 1000) if length != 0 else 0
 
 with right:
     st.markdown('<div class="section-title">Live Result</div>', unsafe_allow_html=True)
 
-    st.markdown(f'<div class="result-box">{HI:.3f} kJ/mm</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="result-box">{HI:.3f} kJ/mm</div>',
+                unsafe_allow_html=True)
 
     if min_range <= HI <= max_range:
-        st.markdown('<div class="pass">PASS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="pass">PASS</div>',
+                    unsafe_allow_html=True)
     else:
-        st.markdown('<div class="fail">FAIL</div>', unsafe_allow_html=True)
+        st.markdown('<div class="fail">FAIL</div>',
+                    unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
