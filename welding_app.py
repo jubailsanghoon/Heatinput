@@ -6,7 +6,7 @@ from datetime import datetime
 st.set_page_config(layout="centered", page_title="Heat Input Master")
 
 # ======================================================
-# CSS - 버튼 크기 120% 확대 및 5% 여백 적용
+# CSS - 정밀한 45:5:45 비율 및 디자인 유지
 # ======================================================
 st.markdown("""
 <style>
@@ -27,32 +27,31 @@ st.markdown("""
     .pass { background:#00cc44; color:white; }
     .fail { background:#ff7f00; color:white; }
 
-    /* Save Data & Export 버튼 (기존 대비 120% 크기: 높이 60px -> 72px) */
+    /* Buttons (120% size 적용: 높이 72px) */
     .stButton > button, .stDownloadButton > button {
         width: 100% !important;
-        height: 72px !important; /* 120% 확대 */
-        font-size: 20px !important; /* 폰트 사이즈도 함께 조절 */
+        height: 72px !important;
+        font-size: 20px !important;
         font-weight: 900 !important;
         background-color: #E0E0E0 !important;
         color: black !important;
         border: 3px solid black !important;
         border-radius: 0px !important;
         padding: 0px !important;
-        transition: 0.2s;
     }
     .stButton > button:hover, .stDownloadButton > button:hover {
         background-color: #CCCCCC !important;
         border-color: #000000 !important;
     }
 
-    /* 입력창 정렬 */
+    /* 입력창 수평 정렬 */
     div[data-testid="stHorizontalBlock"] {
         align-items: center;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 세션 상태 초기화
+# 세션 상태 초기화 (데이터 저장용)
 if 'history' not in st.session_state:
     st.session_state.history = []
 
@@ -118,8 +117,8 @@ with col_right:
     st.markdown(f'<div class="result-box">{HI:.3f} kJ/mm</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="{status.lower()}">{status}</div>', unsafe_allow_html=True)
 
-    # 버튼 레이아웃: [47.5% 버튼 - 5% 여백 - 47.5% 버튼] 비율로 조정
-    btn_col1, btn_space, btn_col2 = st.columns([4.75, 0.5, 4.75])
+    # 버튼 레이아웃: [45% : 5% : 45%] 비율 적용
+    btn_col1, btn_space, btn_col2 = st.columns([4.5, 0.5, 4.5])
     
     with btn_col1:
         if st.button("Save Data"):
