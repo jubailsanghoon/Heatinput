@@ -2,136 +2,175 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-# --- 1. 페이지 설정 (모바일 온리 규격) ---
+# --- 1. 페이지 설정 (모바일 규격 중앙 정렬) ---
 st.set_page_config(page_title="Heat Input Master", layout="centered")
 
-color_bg = "#F2F2F2"
-color_white = "#FFFFFF"
-color_line = "#000000"
-color_pass = "#28A745"
-color_fail = "#DC3545"
-
+# --- 2. 세션 상태 초기화 (입력값 제어용) ---
+if 'v' not in st.session_state: st.session_state.v = 28.0
+if 'a' not in st.session_state: st.session_state.a = 220.0
+if 'l' not in st.session_state: st.session_state.l = 150.0
+if 't' not in st.session_state: st.session_state.t = 120.0
 if 'history' not in st.session_state: st.session_state.history = []
 
-# --- 2. CSS 정밀 보수 (입력창 폭 극소화 및 시인성 고정) ---
+# --- 3. CSS 초정밀 시공 (소장님 레이아웃 완벽 재현) ---
 st.markdown(f"""
     <style>
-    .stApp {{ background-color: {color_bg}; max-width: 480px; margin: 0 auto; }}
-    * {{ color: {color_line} !important; font-family: 'Inter', sans-serif; }}
+    /* 전체 배경 및 중앙 450px 기둥 세우기 */
+    .stApp {{
+        background-color: #F2F2F2;
+        max-width: 450px;
+        margin: 0 auto;
+        border-left: 1px solid #ddd;
+        border-right: 1px solid #ddd;
+    }}
 
-    /* 라디오 버튼 (Standard & Process) */
+    /* 모든 텍스트 검정색 및 굵기 고정 */
+    * {{ color: #000000 !important; font-family: 'Inter', sans-serif; }}
+    
+    /* 섹션 제목 (라벨) */
+    .section-title {{
+        font-size: 1.2rem; font-weight: bold;
+        margin-top: 25px; margin-bottom: 10px;
+        border-left: 5px solid #000; padding-left: 10px;
+    }}
+
+    /* [섹션 1, 2] 라디오 버튼 그리드 (Standard, Process) */
     div[role="radiogroup"] {{ display: grid !important; gap: 8px !important; }}
-    .std-container div[role="radiogroup"] {{ grid-template-columns: repeat(2, 1fr) !important; }}
-    .proc-container div[role="radiogroup"] {{ grid-template-columns: repeat(2, 1fr) !important; }}
+    /* Standard: 2열 배치 */
+    .std-box div[role="radiogroup"] {{ grid-template-columns: repeat(2, 1fr) !important; }}
+    /* Process: 2열 배치 */
+    .proc-box div[role="radiogroup"] {{ grid-template-columns: repeat(2, 1fr) !important; }}
+    
     div[role="radiogroup"] label {{
-        height: 55px !important; border: 2px solid {color_line} !important;
-        background-color: {color_white} !important; justify-content: center !important; font-weight: bold !important;
+        height: 55px !important; border: 2px solid #000 !important;
+        background-color: #FFF !important; justify-content: center !important;
+        font-weight: bold !important; border-radius: 4px !important;
     }}
-    div[role="radiogroup"] label[data-checked="true"] {{ background-color: {color_line} !important; }}
-    div[role="radiogroup"] label[data-checked="true"] p {{ color: {color_white} !important; }}
+    div[role="radiogroup"] label[data-checked="true"] {{ background-color: #000 !important; }}
+    div[role="radiogroup"] label[data-checked="true"] p {{ color: #FFF !important; }}
 
-    /* [섹션 3] 입력창 레이아웃 - 콤팩트 시공 */
-    .param-row {{
-        display: flex !important; align-items: center !important;
-        width: 100% !important; margin-bottom: 12px !important;
+    /* [섹션 3] 파라미터 입력창 (핵심: 라벨 - 버튼 - 숫자 - 버튼) */
+    .param-container {{
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 15px; width: 100%;
     }}
-    .label-box {{ width: 35% !important; font-size: 1.1rem !important; font-weight: bold; }}
+    .param-label {{ width: 35%; font-size: 1.1rem; font-weight: 600; }}
     
-    /* 버튼 스타일 (검정 배경) */
-    .calc-btn button {{
-        width: 50px !important; height: 50px !important; font-size: 1.4rem !important;
-        font-weight: bold !important; border: 2px solid {color_line} !important;
-        background: {color_line} !important; color: {color_white} !important; border-radius: 4px !important;
-        padding: 0 !important;
-    }}
-    
-    /* 숫자 입력창 (매우 콤팩트하게) */
-    .compact-input {{ width: 80px !important; margin: 0 5px !important; }}
-    .compact-input input {{
-        height: 50px !important; text-align: center !important; font-size: 1.3rem !important;
-        font-weight: bold !important; border: 2px solid {color_line} !important; border-radius: 4px !important;
+    /* 조작 버튼 (-) (+) */
+    .stButton button {{
+        width: 50px !important; height: 50px !important;
+        font-size: 1.5rem !important; font-weight: bold !important;
+        border: 2px solid #000 !important; background: #000 !important;
+        color: #FFF !important; border-radius: 4px !important;
+        display: flex; align-items: center; justify-content: center;
         padding: 0 !important;
     }}
 
-    /* 결과 박스 */
-    .result-box {{
-        background: white; border: 3px solid black; height: 80px; 
-        display: flex; align-items: center; justify-content: center; 
-        font-size: 2.2rem; font-weight: bold; margin-top: 15px;
+    /* 숫자창 (가운데 콤팩트 박스) */
+    .value-display {{
+        width: 80px; height: 50px; border: 2px solid #000;
+        background: #FFF; display: flex; align-items: center;
+        justify-content: center; font-size: 1.3rem; font-weight: bold;
+        border-radius: 4px;
+    }}
+
+    /* 결과창 */
+    .result-value {{
+        background: #FFF; border: 3px solid #000; height: 80px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.3rem; font-weight: bold; margin-top: 15px;
+    }}
+    .status-banner {{
+        height: 60px; display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; font-weight: bold; border-radius: 4px;
+        margin-top: 10px; border: 2px solid #000; color: #FFF !important;
     }}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. 헤더 영역 ---
-logo_url = "https://raw.githubusercontent.com/jubailsanghoon/Heatinput/main/db65c0d39f36f2dddc248ea0bf2e4efc.jpg"
-st.markdown(f'<div style="display:flex; align-items:center; border-bottom:4px solid black; padding-bottom:10px; margin-bottom:20px;"><img src="{logo_url}" width="55"><span style="font-size:1.6rem; margin-left:15px; font-weight:bold;">Heat Input Master</span></div>', unsafe_allow_html=True)
+# --- 4. 헤더 영역 ---
+st.markdown(f"""
+    <div style="display: flex; align-items: center; border-bottom: 5px solid black; padding-bottom: 10px; margin-bottom: 10px;">
+        <img src="https://raw.githubusercontent.com/jubailsanghoon/Heatinput/main/db65c0d39f36f2dddc248ea0bf2e4efc.jpg" width="60">
+        <span style="font-size: 1.6rem; margin-left: 15px; font-weight: bold;">Heat Input Master</span>
+    </div>
+""", unsafe_allow_html=True)
 
-# --- 4. 메인 시공 ---
+# --- 5. 레이아웃 순서대로 배치 ---
 
-# [섹션 1] Standard - 지시하신 대로 계수 표기 삭제
-st.markdown("### Standard Selection", unsafe_allow_html=True)
-st.markdown('<div class="std-container">', unsafe_allow_html=True)
+# [섹션 1] Standard Selection
+st.markdown('<div class="section-title">Standard Selection</div>', unsafe_allow_html=True)
+st.markdown('<div class="std-box">', unsafe_allow_html=True)
 std_mode = st.radio("Std", ['ISO Standard', 'AWS Standard'], horizontal=True, label_visibility="collapsed")
 st.markdown('</div>', unsafe_allow_html=True)
 
 # [섹션 2] WPS Range
-st.markdown("### WPS Range (kJ/mm)", unsafe_allow_html=True)
-c_min, c_max = st.columns(2)
-with c_min: w_min = st.number_input("Min", 1.0, step=0.1)
-with c_max: w_max = st.number_input("Max", 2.5, step=0.1)
+st.markdown('<div class="section-title">WPS Range (kJ/mm)</div>', unsafe_allow_html=True)
+col_min, col_max = st.columns(2)
+with col_min: w_min = st.number_input("Min", value=1.0, step=0.1, format="%.1f")
+with col_max: w_max = st.number_input("Max", value=2.5, step=0.1, format="%.1f")
 
-# [섹션 1'] Select Process
-st.markdown("### Select Process", unsafe_allow_html=True)
-st.markdown('<div class="proc-container">', unsafe_allow_html=True)
+# [섹션 3] Select Process
+st.markdown('<div class="section-title">Select Process</div>', unsafe_allow_html=True)
+st.markdown('<div class="proc-box">', unsafe_allow_html=True)
 proc = st.radio("Proc", ['SAW', 'FCAW', 'SMAW', 'GMAW'], label_visibility="collapsed")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# --- [k-factor 로직] 엔진 내부로 격리 ---
+# 효율 계수 k 로직
 if std_mode == 'ISO Standard':
-    if proc == 'SAW': k_val = 1.0
-    elif proc in ['SMAW', 'GMAW', 'FCAW']: k_val = 0.8
-    else: k_val = 0.8 # 기본값
-else: # AWS Standard
-    k_val = 1.0 # AWS는 전통적으로 Gross Heat Input 사용
+    k_val = 1.0 if proc == 'SAW' else 0.8
+else:
+    k_val = 1.0
 
-# --- [섹션 3] Input Parameters (콤팩트 레이아웃) ---
-st.markdown("### Input Parameters", unsafe_allow_html=True)
+# [섹션 4] Input Parameters (핵심: 증감 버튼 작동 로직)
+st.markdown('<div class="section-title">Input Parameters</div>', unsafe_allow_html=True)
 
-# Session State 초기화
-for key, val in {'v':28.0, 'a':220.0, 'l':150.0, 't':120.0}.items():
-    if key not in st.session_state: st.session_state[key] = val
-
-def compact_welding_input(label, val_key, step):
-    st.markdown('<div class="param-row">', unsafe_allow_html=True)
-    c_label, c_minus, c_input, c_plus = st.columns([3.5, 1.5, 2.5, 1.5])
+def manual_input_row(label, key, step):
+    st.markdown(f'<div style="display:flex; align-items:center; margin-bottom:12px; width:100%;">', unsafe_allow_html=True)
     
-    with c_label: st.markdown(f'<div class="label-box">{label}</div>', unsafe_allow_html=True)
-    with c_minus: 
-        if st.button("-", key=f"{val_key}_m"): st.session_state[val_key] -= step
-    with c_input:
-        st.markdown(f'<div class="compact-input">', unsafe_allow_html=True)
-        # 텍스트 입력을 통해 숫자창 폭을 좁게 유지
-        st.text_input(label, value=f"{st.session_state[val_key]:.1f}", label_visibility="collapsed", key=f"{val_key}_disp")
-        st.markdown('</div>', unsafe_allow_html=True)
-    with c_plus:
-        if st.button("+", key=f"{val_key}_p"): st.session_state[val_key] += step
+    # 1. 라벨 (35%)
+    st.markdown(f'<div class="param-label">{label}</div>', unsafe_allow_html=True)
+    
+    # 2. 버튼/입력 영역 (65%)
+    c1, c2, c3 = st.columns([1, 1.8, 1])
+    with c1:
+        if st.button("－", key=f"minus_{key}"): 
+            st.session_state[key] -= step
+            st.rerun()
+    with c2:
+        st.markdown(f'<div class="value-display">{st.session_state[key]:.1f}</div>', unsafe_allow_html=True)
+    with c3:
+        if st.button("＋", key=f"plus_{key}"): 
+            st.session_state[key] += step
+            st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-compact_welding_input("Voltage (V)", "v", 0.5)
-compact_welding_input("Amperage (A)", "a", 5.0)
-compact_welding_input("Length (mm)", "l", 10.0)
-compact_welding_input("Time (Sec)", "t", 1.0)
+manual_input_row("Voltage (V)", 'v', 0.5)
+manual_input_row("Amperage (A)", 'a', 5.0)
+manual_input_row("Length (mm)", 'l', 10.0)
+manual_input_row("Time (Sec)", 't', 1.0)
 
+# --- 6. 계산 및 결과 출력 ---
 v, a, l, t = st.session_state.v, st.session_state.a, st.session_state.l, st.session_state.t
-
-# --- 5. 결과 영역 ---
 hi = (k_val * v * a * t) / (l * 1000) if l > 0 else 0
 is_pass = w_min <= hi <= w_max
 
-st.markdown(f'<div class="result-box">{hi:.3f} kJ/mm</div>', unsafe_allow_html=True)
-st_bg = color_pass if is_pass else color_fail
-st.markdown(f'<div style="background:{st_bg}; color:white !important; height:55px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:bold; border-radius:4px; margin-top:10px; border:2px solid black;">{"PASS" if is_pass else "FAIL"} (k={k_val})</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title">Live Result</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="result-value">{hi:.3f} kJ/mm</div>', unsafe_allow_html=True)
 
-st.button("💾 SAVE LOG DATA", use_container_width=True)
+status_text = "PASS" if is_pass else "FAIL"
+status_color = "#28A745" if is_pass else "#DC3545"
+st.markdown(f'<div class="status-banner" style="background:{status_color};">{status_text} (k={k_val})</div>', unsafe_allow_html=True)
+
+# --- 7. 저장 버튼 및 이력 ---
+st.markdown("<br>", unsafe_allow_html=True)
+if st.button("💾 SAVE LOG DATA", use_container_width=True):
+    st.session_state.history.insert(0, {
+        "Time": datetime.now().strftime("%H:%M:%S"),
+        "Proc": proc, "HI": f"{hi:.3f}", "Status": status_text
+    })
+    st.toast("Saved!")
+
 if st.session_state.history:
-    st.dataframe(pd.DataFrame(st.session_state.history), use_container_width=True)
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.table(pd.DataFrame(st.session_state.history).head(5))
