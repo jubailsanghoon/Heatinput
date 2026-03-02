@@ -38,18 +38,22 @@ st.markdown("""
         font-weight: 900;
         padding: 12px;
         background: #ffe5cc;
-        border: 2px solid black;
+        border: 1px solid #cccccc;
+        border-radius: 6px;
         text-align: center;
         margin-bottom: 8px;
         color: black !important;
+        box-shadow: none;
     }
     .pass, .fail {
         font-size: 24px;
         font-weight: 900;
         padding: 12px;
-        border: 2px solid black;
+        border: 1px solid #cccccc;
+        border-radius: 6px;
         text-align: center;
         margin-bottom: 12px;
+        box-shadow: none;
     }
     .pass { background: #00cc44; color: white !important; }
     .fail { background: #ff7f00; color: white !important; }
