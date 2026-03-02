@@ -6,7 +6,7 @@ from datetime import datetime
 st.set_page_config(layout="centered", page_title="Heat Input Master")
 
 # ======================================================
-# CSS - 디자인 디테일 및 버튼 스타일
+# CSS - 디자인 디테일 및 버튼 레이아웃 수정
 # ======================================================
 st.markdown("""
 <style>
@@ -21,27 +21,26 @@ st.markdown("""
     /* Section Title */
     .section-title { font-size:18px; font-weight:900; margin-top:20px; margin-bottom:15px; }
 
-    /* Result & Button Boxes */
+    /* Result Boxes */
     .result-box { font-size:24px; font-weight:900; padding:15px; background:#ffe5cc; border:3px solid black; text-align: center; margin-bottom: 10px; }
     .pass, .fail { font-size:24px; font-weight:900; padding:15px; border:3px solid black; text-align: center; margin-bottom: 10px; }
     .pass { background:#00cc44; color:white; }
     .fail { background:#ff7f00; color:white; }
 
-    /* Save Data Button Styling (Customizing Streamlit Button) */
-    div.stButton > button {
+    /* 버튼 공통 스타일 (Save & Export) */
+    .stButton > button, .stDownloadButton > button {
         width: 100%;
-        height: 65px;
-        font-size: 24px !important;
+        height: 60px;
+        font-size: 18px !important;
         font-weight: 900 !important;
-        background-color: #E0E0E0 !important; /* 연회색 */
+        background-color: #E0E0E0 !important;
         color: black !important;
         border: 3px solid black !important;
         border-radius: 0px !important;
-        transition: 0.3s;
+        padding: 0px !important;
     }
-    div.stButton > button:hover {
+    .stButton > button:hover, .stDownloadButton > button:hover {
         background-color: #CCCCCC !important;
-        border-color: black !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -101,7 +100,7 @@ with col_left:
     length  = draw_input_row("Length (mm)", 5.0, "l")
     time    = draw_input_row("Time (sec)", 1.0, "t")
 
-# Calculation Logic
+# 계산 로직
 if standard == "AWS":
     k = 1.0
 else:
@@ -118,27 +117,39 @@ with col_right:
     # PASS / FAIL Display
     st.markdown(f'<div class="{status.lower()}">{status}</div>', unsafe_allow_html=True)
 
-    # Save Data Button
-    if st.button("Save Data"):
-        new_data = {
-            "Time": datetime.now().strftime("%H:%M:%S"),
-            "Std": standard,
-            "Process": process,
-            "HI (kJ/mm)": round(HI, 3),
-            "Result": status,
-            "V": voltage, "A": current, "L": length, "T": time
-        }
-        # 50개까지만 저장 (최신 데이터가 위로)
-        st.session_state.history.insert(0, new_data)
-        if len(st.session_state.history) > 50:
-            st.session_state.history.pop()
+    # Save & Export Buttons (45% - 5% - 45% Layout)
+    btn_col1, btn_space, btn_col2 = st.columns([4.5, 1, 4.5])
+    
+    with btn_col1:
+        if st.button("Save Data"):
+            new_data = {
+                "Time": datetime.now().strftime("%H:%M:%S"),
+                "Std": standard, "Process": process,
+                "HI": round(HI, 3), "Result": status,
+                "V": voltage, "A": current, "L": length, "T": time
+            }
+            st.session_state.history.insert(0, new_data)
+            if len(st.session_state.history) > 50: st.session_state.history.pop()
+            st.rerun()
+
+    with btn_col2:
+        if st.session_state.history:
+            df_export = pd.DataFrame(st.session_state.history)
+            csv = df_export.to_csv(index=False).encode('utf-8-sig')
+            st.download_button(
+                label="Export",
+                data=csv,
+                file_name=f"HeatInput_{datetime.now().strftime('%Y%m%d')}.csv",
+                mime="text/csv",
+            )
+        else:
+            st.button("Export", disabled=True, help="데이터를 먼저 저장하세요.")
 
 # ======================================================
-# 4️⃣ History Table (저장된 데이터 보기)
+# 4️⃣ History Table
 # ======================================================
 if st.session_state.history:
     st.markdown('<div class="section-title">Recent History (Max 50)</div>', unsafe_allow_html=True)
-    df = pd.DataFrame(st.session_state.history)
-    st.table(df) # 혹은 st.dataframe(df) 사용 가능
+    st.table(pd.DataFrame(st.session_state.history))
 
 st.markdown('</div>', unsafe_allow_html=True)
