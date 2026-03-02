@@ -70,6 +70,23 @@ for key, value in defaults.items():
     if key not in st.session_state:
         st.session_state[key] = value
 
+st.markdown("""
+<style>
+
+/* number_input 기본 - + 버튼 제거 */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 # -----------------------------
 # Header
 # -----------------------------
