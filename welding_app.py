@@ -33,8 +33,8 @@ html, body, .main {
     margin-bottom: 12px;
 }
 
-/* 버튼 기본 */
-.custom-btn button {
+/* 버튼 공통 */
+.stButton > button {
     width: 100%;
     height: 70px;
     font-size: 22px;
@@ -44,8 +44,8 @@ html, body, .main {
     color: black;
 }
 
-/* 선택된 버튼 */
-.active-btn button {
+/* 선택 상태 */
+.selected > div > button {
     background-color: #FF7A00 !important;
     color: white !important;
 }
@@ -79,57 +79,50 @@ with col2:
 st.markdown('<div style="border-bottom:5px solid #000000;margin-top:10px;"></div>', unsafe_allow_html=True)
 
 # =====================================================
-# Standard Selection (완전 버튼형 라디오)
+# Standard Selection (라디오 버튼형)
 # =====================================================
 st.markdown('<div class="section-title">Standard Selection</div>', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 
 with col1:
-    container = st.container()
+    wrapper = st.container()
     if st.session_state.standard == "ISO":
-        container.markdown('<div class="active-btn custom-btn">', unsafe_allow_html=True)
-    else:
-        container.markdown('<div class="custom-btn">', unsafe_allow_html=True)
-
-    if container.button("ISO", key="iso_btn"):
+        wrapper.markdown('<div class="selected">', unsafe_allow_html=True)
+    if wrapper.button("ISO"):
         st.session_state.standard = "ISO"
         st.rerun()
-    container.markdown('</div>', unsafe_allow_html=True)
+    if st.session_state.standard == "ISO":
+        wrapper.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
-    container = st.container()
+    wrapper = st.container()
     if st.session_state.standard == "AWS":
-        container.markdown('<div class="active-btn custom-btn">', unsafe_allow_html=True)
-    else:
-        container.markdown('<div class="custom-btn">', unsafe_allow_html=True)
-
-    if container.button("AWS", key="aws_btn"):
+        wrapper.markdown('<div class="selected">', unsafe_allow_html=True)
+    if wrapper.button("AWS"):
         st.session_state.standard = "AWS"
         st.rerun()
-    container.markdown('</div>', unsafe_allow_html=True)
+    if st.session_state.standard == "AWS":
+        wrapper.markdown('</div>', unsafe_allow_html=True)
 
 # =====================================================
-# Select Process (4버튼 동일 크기 라디오)
+# Select Process (4버튼 라디오형)
 # =====================================================
 st.markdown('<div class="section-title">Select Process</div>', unsafe_allow_html=True)
 
 p1, p2 = st.columns(2)
 p3, p4 = st.columns(2)
 
-def process_button(name, col):
-    with col:
-        container = st.container()
+def process_button(name, column):
+    with column:
+        wrapper = st.container()
         if st.session_state.process == name:
-            container.markdown('<div class="active-btn custom-btn">', unsafe_allow_html=True)
-        else:
-            container.markdown('<div class="custom-btn">', unsafe_allow_html=True)
-
-        if container.button(name, key=f"{name}_btn"):
+            wrapper.markdown('<div class="selected">', unsafe_allow_html=True)
+        if wrapper.button(name):
             st.session_state.process = name
             st.rerun()
-
-        container.markdown('</div>', unsafe_allow_html=True)
+        if st.session_state.process == name:
+            wrapper.markdown('</div>', unsafe_allow_html=True)
 
 process_button("SAW", p1)
 process_button("FCAW", p2)
