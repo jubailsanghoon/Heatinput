@@ -2,84 +2,78 @@ import streamlit as st
 
 st.set_page_config(page_title="Heat Input Master", layout="centered")
 
-# -----------------------------
-# 🔥 DARK MODE + 600px Tablet 대응 CSS
-# -----------------------------
+# =====================================================
+# 🔥 MOBILE OPTIMIZED CSS
+# =====================================================
 st.markdown("""
 <style>
 
-/* 전체 배경 */
 html, body, .main {
-    background-color: #111111;
-    color: white;
+    background-color: #F2F2F2;
     font-family: Arial, Helvetica, sans-serif;
 }
 
-/* 중앙 고정 폭 (모바일 480 / 태블릿 600) */
 .block-container {
     max-width: 480px;
     padding-top: 10px;
 }
 
-@media (min-width: 768px) {
-    .block-container {
-        max-width: 600px;
-    }
-}
-
-/* 굵은 글씨 */
-h1, h2, h3, label {
-    font-weight: 900 !important;
+/* 제목 */
+.section-title {
+    font-size: 22px;
+    font-weight: 900;
+    border-bottom: 3px solid black;
+    margin-top: 18px;
+    margin-bottom: 10px;
 }
 
 /* 버튼 기본 */
 .stButton>button {
     width: 100%;
-    height: 75px;
-    font-size: 22px;
+    height: 55px;
+    font-size: 18px;
     font-weight: 900;
-    border: 3px solid white;
-    background-color: #222222;
-    color: white;
-}
-
-/* 버튼 hover */
-.stButton>button:hover {
+    border: 2px solid black;
     background-color: white;
     color: black;
 }
 
-/* 🔥 활성화 버튼 */
-.active-btn {
-    background-color: white !important;
-    color: black !important;
+/* 활성 버튼 */
+.active {
+    background-color: black !important;
+    color: white !important;
 }
 
-/* number_input 기본 스핀 제거 */
+/* number_input 기본 + - 제거 */
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
+
 input[type=number] {
     -moz-appearance: textfield;
     width: 90px !important;
     text-align: center;
-    font-size: 22px !important;
-    font-weight: 900 !important;
+    font-weight: 800 !important;
+    font-size: 16px !important;
 }
 
-/* 굵은 구분선 */
-hr {
-    border: 4px solid white;
+/* 결과 박스 */
+.result-box {
+    border: 3px solid black;
+    padding: 10px;
+    margin-top: 8px;
+    font-size: 18px;
+    font-weight: 900;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# -----------------------------
-# Session State 초기화
-# -----------------------------
+# =====================================================
+# Session State
+# =====================================================
 defaults = {
     "standard": "ISO",
     "process": "SAW",
@@ -95,65 +89,64 @@ for k, v in defaults.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
-# -----------------------------
-# Header
-# -----------------------------
-st.markdown("## 🔥 Heat Input Master")
-st.markdown("<hr>", unsafe_allow_html=True)
+# =====================================================
+# 1️⃣ Standard Selection
+# =====================================================
+st.markdown('<div class="section-title">Standard Selection</div>', unsafe_allow_html=True)
 
-# -----------------------------
-# 🔥 Standard Selection (Active Highlight)
-# -----------------------------
-st.markdown("### Standard Selection")
+c1, c2 = st.columns(2)
 
-col1, col2 = st.columns(2)
-
-with col1:
-    iso_class = "active-btn" if st.session_state.standard == "ISO" else ""
+with c1:
     if st.button("ISO"):
         st.session_state.standard = "ISO"
         st.rerun()
-    st.markdown(f"<style>div[data-testid='column']:nth-of-type(1) .stButton>button {{}}</style>", unsafe_allow_html=True)
 
-with col2:
+with c2:
     if st.button("AWS"):
         st.session_state.standard = "AWS"
         st.rerun()
 
-# 버튼 강제 활성화 CSS 적용
+# 활성 표시
 if st.session_state.standard == "ISO":
     st.markdown("""
     <style>
-    div[data-testid="stHorizontalBlock"] button:nth-child(1) {
-        background-color: white !important;
-        color: black !important;
+    div[data-testid="stHorizontalBlock"] button:nth-child(1){
+        background:black !important;
+        color:white !important;
     }
     </style>
     """, unsafe_allow_html=True)
 else:
     st.markdown("""
     <style>
-    div[data-testid="stHorizontalBlock"] button:nth-child(2) {
-        background-color: white !important;
-        color: black !important;
+    div[data-testid="stHorizontalBlock"] button:nth-child(2){
+        background:black !important;
+        color:white !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# -----------------------------
-# WPS Range
-# -----------------------------
-st.markdown("### WPS Range (kJ/mm)")
-col1, col2 = st.columns(2)
-with col1:
-    st.session_state.wps_min = st.number_input("Min", value=st.session_state.wps_min, step=0.1)
-with col2:
-    st.session_state.wps_max = st.number_input("Max", value=st.session_state.wps_max, step=0.1)
+# =====================================================
+# 2️⃣ WPS Range
+# =====================================================
+st.markdown('<div class="section-title">WPS Range</div>', unsafe_allow_html=True)
 
-# -----------------------------
-# 🔥 Process Selection
-# -----------------------------
-st.markdown("### Select Process")
+w1, w2 = st.columns([3,1])
+with w1:
+    st.session_state.wps_min = st.number_input("Min.", value=st.session_state.wps_min, step=0.1)
+with w2:
+    st.write("kJ/mm")
+
+w3, w4 = st.columns([3,1])
+with w3:
+    st.session_state.wps_max = st.number_input("Max.", value=st.session_state.wps_max, step=0.1)
+with w4:
+    st.write("kJ/mm")
+
+# =====================================================
+# 3️⃣ Process Selection
+# =====================================================
+st.markdown('<div class="section-title">Select Process</div>', unsafe_allow_html=True)
 
 p1, p2 = st.columns(2)
 p3, p4 = st.columns(2)
@@ -169,47 +162,45 @@ process_btn("FCAW", p2)
 process_btn("SMAW", p3)
 process_btn("GMAW", p4)
 
-# 활성 공정 버튼 강조
-st.markdown(f"""
-<style>
-button:contains("{st.session_state.process}") {{
-    background-color: white !important;
-    color: black !important;
-}}
-</style>
-""", unsafe_allow_html=True)
+# =====================================================
+# 4️⃣ Input Parameters
+# =====================================================
+st.markdown('<div class="section-title">Input Parameters</div>', unsafe_allow_html=True)
 
-# -----------------------------
-# Input Row
-# -----------------------------
 def input_row(label, key, step):
-    c1, c2, c3, c4 = st.columns([3.5,1.5,3.5,1.5])
 
-    with c1:
-        st.markdown(f"### {label}")
+    l, m, v, p = st.columns([2.5,1,2,1])
 
-    with c2:
-        if st.button("－", key=f"minus_{key}"):
+    with l:
+        st.markdown(f"**{label}**")
+
+    with m:
+        if st.button("-", key=f"minus_{key}"):
             st.session_state[key] -= step
             st.rerun()
 
-    with c3:
-        st.session_state[key] = st.number_input("", value=st.session_state[key], step=step, key=f"input_{key}", label_visibility="collapsed")
+    with v:
+        st.session_state[key] = st.number_input(
+            "",
+            value=st.session_state[key],
+            step=step,
+            key=f"input_{key}",
+            label_visibility="collapsed"
+        )
 
-    with c4:
-        if st.button("＋", key=f"plus_{key}"):
+    with p:
+        if st.button("+", key=f"plus_{key}"):
             st.session_state[key] += step
             st.rerun()
 
-st.markdown("### Input Parameters")
 input_row("Voltage (V)", "voltage", 1.0)
-input_row("Current (A)", "current", 10.0)
-input_row("Time (Sec)", "time", 1.0)
+input_row("Amperage (A)", "current", 10.0)
 input_row("Length (mm)", "length", 10.0)
+input_row("Time (Sec)", "time", 1.0)
 
-# -----------------------------
-# Calculation
-# -----------------------------
+# =====================================================
+# 5️⃣ Calculation
+# =====================================================
 if st.session_state.standard == "AWS":
     k = 1.0
 else:
@@ -222,12 +213,24 @@ L = st.session_state.length
 
 HI = (k * V * A * t) / (L * 1000)
 
-st.markdown("<hr>", unsafe_allow_html=True)
-st.markdown(f"## 🔥 Heat Input: {HI:.3f} kJ/mm")
+# =====================================================
+# 6️⃣ Live Result
+# =====================================================
+st.markdown('<div class="section-title">Live Result</div>', unsafe_allow_html=True)
+
+st.markdown(f'<div class="result-box">kJ/mm : {HI:.3f}</div>', unsafe_allow_html=True)
 
 if HI < st.session_state.wps_min:
-    st.error("Below WPS Minimum")
+    status = "Below Min"
 elif HI > st.session_state.wps_max:
-    st.error("Above WPS Maximum")
+    status = "Above Max"
 else:
-    st.success("Within WPS Range")
+    status = "Pass"
+
+st.markdown(f'<div class="result-box">{status}</div>', unsafe_allow_html=True)
+
+# =====================================================
+# 7️⃣ Save Data
+# =====================================================
+if st.button("Save Data"):
+    st.success("Saved (Demo)")
