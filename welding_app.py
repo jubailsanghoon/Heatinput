@@ -211,26 +211,48 @@ for err in errors:
     st.error(err)
 
 # ======================================================
-# 4. 버튼 구역
+# 4. Optional Info Fields
 # ======================================================
-b_cols = st.columns(2)
+st.markdown('<div class="section-title">Additional Info <span style="font-weight:400; font-size:13px; color:#888;">(선택 입력)</span></div>', unsafe_allow_html=True)
+
+opt_col1, opt_col2 = st.columns(2)
+with opt_col1:
+    wps_no    = st.text_input("WPS No.", placeholder="예) WPS-001", label_visibility="visible")
+with opt_col2:
+    welder_no = st.text_input("Welder No.", placeholder="예) W-123", label_visibility="visible")
+
+opt_col3, opt_col4 = st.columns(2)
+with opt_col3:
+    joint_no  = st.text_input("Joint No.", placeholder="예) J-01", label_visibility="visible")
+with opt_col4:
+    st.markdown("**Pass Type**")
+    pass_type = st.radio("Pass Type", ["Root", "Fill", "Cap"], horizontal=True, label_visibility="collapsed")
+
+# ======================================================
+# 5. 버튼 구역
+# ======================================================
+b_cols = st.columns([1, 0.1, 1])
 
 with b_cols[0]:
     save_disabled = bool(errors) or (min_range >= max_range)
     if st.button("Save Data", disabled=save_disabled):
         new_entry = {
-            "Time":   datetime.now().strftime("%H:%M:%S"),
-            "Std":    standard,
-            "Prc":    process,
-            "k":      k,
-            "HI":     round(HI, 3),
-            "Result": status,
-            "V":      voltage,
-            "A":      current,
-            "L(mm)":  length,
-            "T(s)":   time_s,
-            "Min":    min_range,
-            "Max":    max_range,
+            "Time":      datetime.now().strftime("%H:%M:%S"),
+            "WPS No.":   wps_no if wps_no else "-",
+            "Pass":      pass_type,
+            "Welder":    welder_no if welder_no else "-",
+            "Joint":     joint_no if joint_no else "-",
+            "Std":       standard,
+            "Prc":       process,
+            "k":         k,
+            "HI":        round(HI, 3),
+            "Result":    status,
+            "V":         voltage,
+            "A":         current,
+            "L(mm)":     length,
+            "T(s)":      time_s,
+            "Min":       min_range,
+            "Max":       max_range,
         }
         st.session_state.history.insert(0, new_entry)
         if len(st.session_state.history) > 50:
@@ -238,7 +260,7 @@ with b_cols[0]:
         st.toast("저장되었습니다!", icon="✅")
         st.rerun()
 
-with b_cols[1]:
+with b_cols[2]:
     if st.session_state.history:
         csv = pd.DataFrame(st.session_state.history).to_csv(index=False).encode("utf-8-sig")
         st.download_button(
@@ -251,7 +273,7 @@ with b_cols[1]:
         st.button("Export CSV", disabled=True)
 
 # ======================================================
-# 5. 히스토리 테이블
+# 6. 히스토리 테이블
 # ======================================================
 if st.session_state.history:
     st.markdown('<div class="section-title">Recent History (최근 50건)</div>', unsafe_allow_html=True)
