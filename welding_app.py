@@ -6,7 +6,7 @@ from datetime import datetime
 st.set_page_config(layout="centered", page_title="Heat Input Master")
 
 # ======================================================
-# CSS - 버튼 사이즈 강제 일원화 및 간격 제어
+# CSS - 간격 최소화 및 버튼 사이즈 완벽 일치화
 # ======================================================
 st.markdown("""
 <style>
@@ -27,7 +27,7 @@ st.markdown("""
     .pass { background:#00cc44; color:white; }
     .fail { background:#ff7f00; color:white; }
 
-    /* ★중요: Save Data와 Export 버튼 크기를 소수점까지 일치시키는 핵심 CSS★ */
+    /* ★버튼 크기 일치화 (Export 버튼 작아짐 방지)★ */
     .stButton, .stDownloadButton { width: 100% !important; }
     .stButton > button, .stDownloadButton > button {
         width: 100% !important;
@@ -48,7 +48,7 @@ st.markdown("""
         border-color: #000000 !important;
     }
 
-    /* 수평 중앙 정렬 */
+    /* 수평 중앙 정렬 (항목명과 입력창 높이 맞춤) */
     div[data-testid="stHorizontalBlock"] { align-items: center; }
 </style>
 """, unsafe_allow_html=True)
@@ -81,10 +81,10 @@ with c_prc:
     process = st.radio("Prc", ["SAW","FCAW","SMAW","GMAW"], horizontal=True, label_visibility="collapsed")
 
 # ======================================================
-# 2️⃣ WPS Range (여백 최소화 레이아웃)
+# 2️⃣ WPS Range (이미지 2번: 항목-입력창 여백 최소화)
 # ======================================================
 st.markdown('<div class="section-title">WPS Range (kJ/mm)</div>', unsafe_allow_html=True)
-# [Min.](0.4) + [5%여백](0.05) + [입력창](1.8) + [10%여백](0.5) + [Max.](0.4) + [5%여백](0.05) + [입력창](1.8)
+# [항목명](0.4) + [여백5%](0.05) + [입력창](1.8) + [여백10%](0.5) + [항목명](0.4) + [여백5%](0.05) + [입력창](1.8)
 w_cols = st.columns([0.4, 0.05, 1.8, 0.5, 0.4, 0.05, 1.8, 1.2])
 
 with w_cols[0]: st.markdown("**Min.**")
@@ -93,7 +93,7 @@ with w_cols[4]: st.markdown("**Max.**")
 with w_cols[6]: max_range = st.number_input("max", value=2.50, step=0.01, format="%.2f", label_visibility="collapsed")
 
 # ======================================================
-# 3️⃣ Input & Result Section (여백 최소화 적용)
+# 3️⃣ Input Parameters & Live Result (이미지 2번: 수평 정렬)
 # ======================================================
 st.write("") 
 col_left, col_space, col_right = st.columns([5, 0.8, 4.2])
@@ -101,7 +101,7 @@ col_left, col_space, col_right = st.columns([5, 0.8, 4.2])
 with col_left:
     st.markdown('<div class="section-title">Input Parameters</div>', unsafe_allow_html=True)
     def draw_input_row(label, value, key):
-        # 항목명(1.5) + 5%여백(0.05) + 입력창(2)
+        # [항목명](1.5) + [여백5%](0.05) + [입력창](2)
         r_cols = st.columns([1.5, 0.05, 2])
         with r_cols[0]: st.markdown(f"**{label}**")
         with r_cols[2]: return st.number_input(label, value=value, step=0.1, format="%.1f", key=key, label_visibility="collapsed")
@@ -121,13 +121,12 @@ with col_right:
     st.markdown(f'<div class="{status.lower()}">{status}</div>', unsafe_allow_html=True)
 
 # ======================================================
-# 4️⃣ 별도 버튼 구역 (45:5:45 오른쪽 맞춤 고정)
+# 4️⃣ 버튼 구역 (독립된 행에서 45:5:45 오른쪽 맞춤)
 # ======================================================
 btn_row_left, btn_row_space, btn_row_right = st.columns([5, 0.8, 4.2])
 
 with btn_row_right:
-    # 4.2 너비 내에서: 여백(5%) + Save(45%) + 여백(5%) + Export(45%) = 총합 100%
-    # 비율: [0.5, 4.5, 0.5, 4.5]
+    # 4.2 너비 구역 안에서: [여백5%](0.5) + [Save(45%)](4.5) + [여백5%](0.5) + [Export(45%)](4.5)
     b_cols = st.columns([0.5, 4.5, 0.5, 4.5])
     
     with b_cols[1]:
