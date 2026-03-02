@@ -6,7 +6,7 @@ from datetime import datetime
 st.set_page_config(layout="centered", page_title="Heat Input Master")
 
 # ======================================================
-# CSS - 섹션 분리 및 정밀 간격 제어
+# CSS - 버튼 사이즈 일원화 및 정밀 간격 제어
 # ======================================================
 st.markdown("""
 <style>
@@ -27,7 +27,8 @@ st.markdown("""
     .pass { background:#00cc44; color:white; }
     .fail { background:#ff7f00; color:white; }
 
-    /* Save Data & Export 버튼 (높이 72px) */
+    /* Save Data & Export 버튼 사이즈 완벽 일치화 */
+    /* 일반 버튼과 다운로드 버튼의 컨테이너를 모두 제어 */
     .stButton > button, .stDownloadButton > button {
         width: 100% !important;
         height: 72px !important;
@@ -38,14 +39,17 @@ st.markdown("""
         border: 3px solid black !important;
         border-radius: 0px !important;
         padding: 0px !important;
-        margin: 0px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
+    
     .stButton > button:hover, .stDownloadButton > button:hover {
         background-color: #CCCCCC !important;
         border-color: #000000 !important;
     }
 
-    /* 수평 중앙 정렬 */
+    /* 수평 정렬 보정 */
     div[data-testid="stHorizontalBlock"] {
         align-items: center;
     }
@@ -80,11 +84,11 @@ with c_prc:
     process = st.radio("Prc", ["SAW","FCAW","SMAW","GMAW"], horizontal=True, label_visibility="collapsed")
 
 # ======================================================
-# 2️⃣ WPS Range (여백 최소화 레이아웃)
+# 2️⃣ WPS Range (항목-입력창 여백 최소화)
 # ======================================================
 st.markdown('<div class="section-title">WPS Range (kJ/mm)</div>', unsafe_allow_html=True)
-# 비율 설명: [항목명, 5%여백, 입력창, 10%여백, 항목명, 5%여백, 입력창, (오른쪽맞춤용여백)]
-w_cols = st.columns([0.45, 0.05, 2, 0.4, 0.45, 0.05, 2, 1])
+# 비율: [Min(0.4), 여백(0.05), 입력창(1.8), 여백(0.5), Max(0.4), 여백(0.05), 입력창(1.8), 우측남는공간(1.2)]
+w_cols = st.columns([0.4, 0.05, 1.8, 0.5, 0.4, 0.05, 1.8, 1.2])
 
 with w_cols[0]: st.markdown("**Min.**")
 with w_cols[2]: min_range = st.number_input("min", value=0.96, step=0.01, format="%.2f", label_visibility="collapsed")
@@ -102,8 +106,8 @@ with col_left:
     
     # 항목과 입력창 사이 여백 최소화 함수
     def draw_input_row(label, value, key):
-        # [항목명, 여백5%, 입력창]
-        r_cols = st.columns([2, 0.1, 2.5])
+        # [항목명, 여백5%, 입력창] -> 비율 조정으로 여백 최소화
+        r_cols = st.columns([1.5, 0.05, 2])
         with r_cols[0]: st.markdown(f"**{label}**")
         with r_cols[2]: return st.number_input(label, value=value, step=0.1, format="%.1f", key=key, label_visibility="collapsed")
 
@@ -123,13 +127,14 @@ with col_right:
     st.markdown(f'<div class="{status.lower()}">{status}</div>', unsafe_allow_html=True)
 
 # ======================================================
-# 4️⃣ 별도의 버튼 구역 (PASS 박스 오른쪽 맞춤)
+# 4️⃣ 별도의 버튼 구역 (PASS 박스 기준 45% : 5% : 45% 오른쪽 맞춤)
 # ======================================================
-# 상단 col_right 너비(4.2)와 맞추기 위해 동일한 시작 위치의 행 생성
+# PASS 박스가 있는 col_right 구역 아래에 정렬
 btn_row_left, btn_row_space, btn_row_right = st.columns([5, 0.8, 4.2])
 
 with btn_row_right:
-    # 오른쪽 맞춤을 위해 95%(45+5+45) 앞에 5%의 빈 공간(spacer) 배치
+    # 45% : 5% : 45% 비율을 만들기 위해 총합 10을 기준으로 분할
+    # 오른쪽 맞춤을 위해 남는 5%를 왼쪽에 spacer로 배치: [0.5, 4.5, 0.5, 4.5]
     b_spacer, b1, b_gap, b2 = st.columns([0.5, 4.5, 0.5, 4.5])
     
     with b1:
