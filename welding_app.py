@@ -30,30 +30,15 @@ body { background-color:#F2F2F2; }
     font-size:18px;
     font-weight:900;
     margin-top:15px;
-    margin-bottom:5px;
-}
-
-/* Radio Selected */
-input[type="radio"]:checked + div {
-    background:#ff7f00 !important;
-    color:white !important;
-}
-
-/* Inline Row */
-.inline-row {
-    display:flex;
-    align-items:center;
-    gap:3%;
     margin-bottom:8px;
 }
 
-.label {
-    width:35%;
-    font-weight:900;
-}
-
-.input-box {
-    width:25%;
+/* Inline input row */
+.inline-row {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:8px;
 }
 
 /* Result */
@@ -94,21 +79,20 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ======================================================
-# 1️⃣ Standard + Process (가로 배치)
+# 1️⃣ Standard + Process
 # ======================================================
 left, space, right = st.columns([4,1,5])
 
 with left:
     st.markdown('<div class="section-title">Standard Selection</div>', unsafe_allow_html=True)
-    standard = st.radio("", ["AWS","ISO"], horizontal=True, key="std")
+    standard = st.radio("", ["AWS","ISO"], horizontal=True)
 
 with right:
     st.markdown('<div class="section-title">Select Process</div>', unsafe_allow_html=True)
-    process = st.radio("", ["SAW","FCAW","SMAW","GMAW"],
-                       horizontal=True, key="proc")
+    process = st.radio("", ["SAW","FCAW","SMAW","GMAW"], horizontal=True)
 
 # ======================================================
-# 2️⃣ WPS Range 한 줄 정렬
+# 2️⃣ WPS Range (한 줄 정렬)
 # ======================================================
 st.markdown('<div class="section-title">WPS Range (kJ/mm)</div>', unsafe_allow_html=True)
 
@@ -117,13 +101,11 @@ col1, col2, col3, col4 = st.columns([1,2,1,2])
 with col1:
     st.markdown("**Min.**")
 with col2:
-    min_range = st.number_input("", step=0.01, format="%.2f",
-                                value=0.96, key="min")
+    min_range = st.number_input("", step=0.01, format="%.2f", value=0.96)
 with col3:
     st.markdown("**Max.**")
 with col4:
-    max_range = st.number_input("", step=0.01, format="%.2f",
-                                value=2.50, key="max")
+    max_range = st.number_input("", step=0.01, format="%.2f", value=2.50)
 
 # ======================================================
 # 3️⃣ Input + Result
@@ -138,10 +120,8 @@ with left:
         with c1:
             st.markdown(f"**{label}**")
         with c2:
-            return st.number_input("", step=0.1,
-                                   format="%.1f",
-                                   value=default,
-                                   key=key)
+            return st.number_input("", step=0.1, format="%.1f",
+                                   value=default, key=key)
 
     voltage = input_row("Voltage (V)", "v", 30.0)
     current = input_row("Current (A)", "c", 300.0)
@@ -151,9 +131,25 @@ with left:
 # ======================================================
 # Calculation
 # ======================================================
-k = 1.0 if standard == "AWS" else (1.0 if process=="SAW" else 0.8)
-HI = (k * voltage * current * time) / (length * 1000) if length != 0 else 0
+if standard == "AWS":
+    k = 1.0
+else:
+    efficiency = {
+        "SAW": 1.0,
+        "GMAW": 0.8,
+        "FCAW": 0.8,
+        "SMAW": 0.8
+    }
+    k = efficiency.get(process, 0.8)
 
+if length > 0 and time > 0:
+    HI = (k * voltage * current * time) / (length * 1000)
+else:
+    HI = 0
+
+# ======================================================
+# Result
+# ======================================================
 with right:
     st.markdown('<div class="section-title">Live Result</div>', unsafe_allow_html=True)
 
