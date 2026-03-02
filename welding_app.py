@@ -6,7 +6,7 @@ from datetime import datetime
 st.set_page_config(layout="centered", page_title="Heat Input Master")
 
 # ======================================================
-# CSS - 정밀한 45:5:45 비율 및 디자인 유지
+# CSS - 디자인 디테일 및 버튼 밸런스 조정
 # ======================================================
 st.markdown("""
 <style>
@@ -27,7 +27,7 @@ st.markdown("""
     .pass { background:#00cc44; color:white; }
     .fail { background:#ff7f00; color:white; }
 
-    /* Buttons (120% size 적용: 높이 72px) */
+    /* Save Data & Export 버튼 스타일 (기존 대비 120% 크기: 높이 72px) */
     .stButton > button, .stDownloadButton > button {
         width: 100% !important;
         height: 72px !important;
@@ -37,14 +37,16 @@ st.markdown("""
         color: black !important;
         border: 3px solid black !important;
         border-radius: 0px !important;
+        transition: 0.2s;
         padding: 0px !important;
+        margin: 0px !important;
     }
     .stButton > button:hover, .stDownloadButton > button:hover {
         background-color: #CCCCCC !important;
         border-color: #000000 !important;
     }
 
-    /* 입력창 수평 정렬 */
+    /* 입력창 라벨과 입력박스 높이 정렬 */
     div[data-testid="stHorizontalBlock"] {
         align-items: center;
     }
@@ -79,7 +81,7 @@ with c_prc:
     process = st.radio("Prc", ["SAW","FCAW","SMAW","GMAW"], horizontal=True, label_visibility="collapsed")
 
 # ======================================================
-# 2️⃣ WPS Range
+# 2️⃣ WPS Range (가로 정렬)
 # ======================================================
 st.markdown('<div class="section-title">WPS Range (kJ/mm)</div>', unsafe_allow_html=True)
 w1, w2, w3, w4, w5 = st.columns([0.8, 2, 0.8, 2, 2.4])
@@ -97,6 +99,7 @@ col_left, col_space, col_right = st.columns([5, 0.8, 4.2])
 with col_left:
     st.markdown('<div class="section-title">Input Parameters</div>', unsafe_allow_html=True)
     
+    # 라벨과 입력을 한 줄에 배치
     def draw_input_row(label, value, key):
         r1, r2 = st.columns([2, 2.5])
         with r1: st.markdown(f"**{label}**")
@@ -107,7 +110,7 @@ with col_left:
     length  = draw_input_row("Length (mm)", 5.0, "l")
     time    = draw_input_row("Time (sec)", 1.0, "t")
 
-# Calculation
+# 계산 로직 (AWS=1.0 / ISO는 공정별 상이)
 k = 1.0 if standard == "AWS" else {"SAW": 1.0, "GMAW": 0.8, "FCAW": 0.8, "SMAW": 0.8}.get(process, 0.8)
 HI = (k * voltage * current * time) / (length * 1000) if length > 0 else 0
 status = "PASS" if min_range <= HI <= max_range else "FAIL"
@@ -141,7 +144,7 @@ with col_right:
             st.button("Export", disabled=True)
 
 # ======================================================
-# 4️⃣ History Table
+# 4️⃣ History Table (최근 50개)
 # ======================================================
 if st.session_state.history:
     st.markdown('<div class="section-title">Recent History (Max 50)</div>', unsafe_allow_html=True)
