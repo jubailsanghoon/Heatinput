@@ -6,7 +6,7 @@ from datetime import datetime
 st.set_page_config(layout="centered", page_title="Heat Input Master")
 
 # ======================================================
-# CSS - 섹션 분리 및 버튼 디자인 유지
+# CSS - 섹션 분리 및 버튼 비율 정밀 제어
 # ======================================================
 st.markdown("""
 <style>
@@ -21,13 +21,13 @@ st.markdown("""
     /* Section Title */
     .section-title { font-size:18px; font-weight:900; margin-top:15px; margin-bottom:10px; }
 
-    /* Result Boxes */
+    /* Result Boxes (Live Result & Pass/Fail) */
     .result-box { font-size:26px; font-weight:900; padding:15px; background:#ffe5cc; border:3px solid black; text-align: center; margin-bottom: 10px; }
     .pass, .fail { font-size:26px; font-weight:900; padding:15px; border:3px solid black; text-align: center; margin-bottom: 15px; }
     .pass { background:#00cc44; color:white; }
     .fail { background:#ff7f00; color:white; }
 
-    /* Save Data & Export 버튼 (높이 72px 유지) */
+    /* Buttons (높이 72px, 텍스트 중앙 정렬) */
     .stButton > button, .stDownloadButton > button {
         width: 100% !important;
         height: 72px !important;
@@ -39,6 +39,9 @@ st.markdown("""
         border-radius: 0px !important;
         padding: 0px !important;
         margin: 0px !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     .stButton > button:hover, .stDownloadButton > button:hover {
         background-color: #CCCCCC !important;
@@ -90,9 +93,10 @@ with w3: st.markdown("**Max.**")
 with w4: max_range = st.number_input("max", value=2.50, step=0.01, format="%.2f", label_visibility="collapsed")
 
 # ======================================================
-# 3️⃣ Input & Result Section (메인 구역)
+# 3️⃣ Input & Result Section (메인 레이아웃)
 # ======================================================
 st.write("") 
+# 결과창 너비 비중을 4.2로 설정
 col_left, col_space, col_right = st.columns([5, 0.8, 4.2])
 
 with col_left:
@@ -118,13 +122,13 @@ with col_right:
     st.markdown(f'<div class="{status.lower()}">{status}</div>', unsafe_allow_html=True)
 
 # ======================================================
-# 4️⃣ 별도의 버튼 구역 (간섭 방지를 위해 새로 생성)
+# 4️⃣ 독립된 버튼 구역 (PASS 박스 아래 정밀 배치)
 # ======================================================
-# 상단 col_right 너비(4.2)와 맞추기 위해 동일한 비율의 행 생성
+# 상단 col_right와 동일한 시작 위치를 갖도록 동일 비율 행 생성
 btn_row_left, btn_row_space, btn_row_right = st.columns([5, 0.8, 4.2])
 
 with btn_row_right:
-    # 4.2 너비 안에서 45% : 5% : 45% 비율 분할
+    # 요청하신 45% : 5% : 45% 비율 적용
     b1, b_space, b2 = st.columns([4.5, 0.5, 4.5])
     
     with b1:
@@ -150,10 +154,11 @@ with btn_row_right:
                 mime="text/csv"
             )
         else:
+            # 데이터 없을 시 비활성화된 버튼 레이아웃 유지
             st.button("Export", disabled=True)
 
 # ======================================================
-# 5️⃣ History Table
+# 5️⃣ 히스토리 테이블
 # ======================================================
 if st.session_state.history:
     st.markdown('<div class="section-title">Recent History (Max 50)</div>', unsafe_allow_html=True)
