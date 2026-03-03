@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import pytz
+
+KST = pytz.timezone("Asia/Seoul")
 
 st.set_page_config(layout="centered", page_title="Heat Input Master")
 
@@ -13,19 +16,19 @@ st.markdown("""
     h1, h2, h3, p, span, div, label, .stMarkdown {
         color: #000000 !important;
     }
-    .main-container { 
-        max-width: 100% !important; 
-        margin: auto; 
-        font-family: 'Segoe UI', sans-serif; 
+    .main-container {
+        max-width: 100% !important;
+        margin: auto;
+        font-family: 'Segoe UI', sans-serif;
         padding: 10px;
     }
     .header { display:flex; align-items:center; border-bottom:4px solid black; padding-bottom:10px; margin-bottom:15px; }
     .header img { height:40px; margin-right:10px; }
     .title { font-size:22px; font-weight:900; }
     .section-title { font-size:16px; font-weight:900; margin-top:12px; margin-bottom:8px; }
-    .result-box-pass { font-size:18px; font-weight:900; padding:8px; background:#90ee90; border:2px solid black; text-align:center; margin-bottom:8px; color:black !important; line-height:1.4; }
-    .result-box-fail { font-size:18px; font-weight:900; padding:8px; background:#ff7f00; border:2px solid black; text-align:center; margin-bottom:8px; color:white !important; line-height:1.4; }
-    .result-box-none { font-size:18px; font-weight:900; padding:8px; background:#ffffff; border:2px solid black; text-align:center; margin-bottom:8px; color:black !important; line-height:1.4; }
+    .result-box-pass { font-size:18px; font-weight:900; padding:8px; background:#90ee90; border:2px solid black; border-radius:6px; text-align:center; margin-bottom:8px; color:black !important; line-height:1.4; }
+    .result-box-fail { font-size:18px; font-weight:900; padding:8px; background:#ff7f00; border:2px solid black; border-radius:6px; text-align:center; margin-bottom:8px; color:white !important; line-height:1.4; }
+    .result-box-none { font-size:18px; font-weight:900; padding:8px; background:#ffffff; border:2px solid black; border-radius:6px; text-align:center; margin-bottom:8px; color:black !important; line-height:1.4; }
     .stButton > button, .stDownloadButton > button {
         width: 100% !important;
         height: 60px !important;
@@ -42,8 +45,8 @@ st.markdown("""
         color: #000000 !important;
         border: 1px solid #cccccc !important;
     }
-    div[data-testid="stHorizontalBlock"] { 
-        align-items: center; 
+    div[data-testid="stHorizontalBlock"] {
+        align-items: center;
         gap: 0.5rem;
     }
 </style>
@@ -59,6 +62,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# 1. Standard & Process
 c_std, c_prc = st.columns([1, 1])
 with c_std:
     st.markdown('<div class="section-title">Standard</div>', unsafe_allow_html=True)
@@ -67,6 +71,7 @@ with c_prc:
     st.markdown('<div class="section-title">Process</div>', unsafe_allow_html=True)
     process = st.radio("Prc", ["SAW", "FCAW", "SMAW", "GMAW"], horizontal=True, label_visibility="collapsed")
 
+# 2. WPS Range
 st.markdown('<div class="section-title">WPS Range (kJ/mm)</div>', unsafe_allow_html=True)
 wps_input_mode = st.radio("WPS Mode", ["Input", "No input"], horizontal=True, label_visibility="collapsed")
 
@@ -84,6 +89,7 @@ else:
     min_range = None
     max_range = None
 
+# 3. Input Parameters & Live Result
 st.write("")
 col_left, col_right = st.columns([1.2, 1])
 
@@ -104,7 +110,11 @@ with col_left:
 
 k = 1.0 if standard == "AWS" else {"SAW": 1.0, "GMAW": 0.8, "FCAW": 0.8, "SMAW": 0.8}.get(process, 0.8)
 HI = (k * voltage * current * time) / (length * 1000) if length > 0 else 0
-status = "PASS" if (min_range is not None and max_range is not None and min_range <= HI <= max_range) else ("FAIL" if (min_range is not None and max_range is not None) else "-")
+
+if min_range is not None and max_range is not None:
+    status = "PASS" if min_range <= HI <= max_range else "FAIL"
+else:
+    status = "-"
 
 with col_right:
     st.markdown('<div class="section-title">Live Result</div>', unsafe_allow_html=True)
@@ -119,6 +129,7 @@ with col_right:
         unsafe_allow_html=True
     )
 
+# 4. Optional Info
 st.markdown('<div class="section-title">Optional Info</div>', unsafe_allow_html=True)
 opt_cols = st.columns(3)
 with opt_cols[0]:
@@ -128,15 +139,17 @@ with opt_cols[1]:
 with opt_cols[2]:
     joint_no = st.text_input("Joint No.", value="", placeholder="Joint No.")
 
+# 5. Weld Pass
 st.markdown('<div class="section-title">Weld Pass</div>', unsafe_allow_html=True)
 pass_type = st.radio("Pass", ["Root", "Fill", "Cap"], horizontal=True, label_visibility="collapsed")
 
+# 6. Buttons
 btn_left, btn_gap, btn_right = st.columns([0.475, 0.05, 0.475])
 
 with btn_left:
     if st.button("Save Data"):
         new_entry = {
-            "Time":       datetime.now().strftime("%H:%M:%S"),
+            "Time":       datetime.now(KST).strftime("%H:%M:%S"),
             "Std":        standard,
             "Prc":        process,
             "HI":         round(HI, 3),
@@ -161,12 +174,13 @@ with btn_right:
         st.download_button(
             label="Export",
             data=csv,
-            file_name=f"HI_{datetime.now().strftime('%m%d_%H%M')}.csv",
+            file_name=f"HI_{datetime.now(KST).strftime('%m%d_%H%M')}.csv",
             mime="text/csv"
         )
     else:
         st.button("Export", disabled=True)
 
+# 7. History
 if st.session_state.history:
     st.markdown('<div class="section-title">Recent History</div>', unsafe_allow_html=True)
     st.dataframe(pd.DataFrame(st.session_state.history), use_container_width=True)
