@@ -2,83 +2,115 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
+# 페이지 설정
 st.set_page_config(layout="centered", page_title="Heat Input Master")
 
+# ======================================================
+# CSS - 레이아웃 안정화 및 가독성 중심 디자인 (모바일 대응 포함)
+# ======================================================
 st.markdown("""
 <style>
-    [data-testid="stAppViewContainer"], .main-container, .stApp {
+    /* 전체 여백 조정 */
+    .block-container {
+        padding-top: 2.5rem !important; 
+        padding-bottom: 2rem !important;
+        max-width: 800px !important;
+    }
+    
+    [data-testid="stAppViewContainer"], .stApp {
         background-color: #FFFFFF !important;
         color: #000000 !important;
     }
-    h1, h2, h3, p, span, div, label, .stMarkdown {
-        color: #000000 !important;
-    }
-    .main-container {
-        max-width: 100% !important;
-        margin: auto;
-        font-family: 'Segoe UI', sans-serif;
-        padding: 10px;
-    }
+
+    /* 헤더 디자인 */
     .header {
         display: flex;
         align-items: center;
         border-bottom: 4px solid black;
-        padding-bottom: 10px;
-        margin-bottom: 15px;
+        padding-bottom: 8px;
+        margin-top: 0px; 
+        margin-bottom: 25px;
     }
-    .header img { height: 40px; margin-right: 10px; }
-    .title { font-size: 22px; font-weight: 900; }
-    .section-title { font-size: 16px; font-weight: 900; margin-top: 12px; margin-bottom: 8px; }
-    .result-box {
-        font-size: 24px;
+    .header img { height: 45px; margin-right: 15px; }
+    .title { 
+        font-size: 24px; 
+        font-weight: 900; 
+        color: black;
+    }
+
+    /* 섹션 제목 */
+    .section-title { 
+        font-size: 18px; 
+        font-weight: 900; 
+        margin-top: 20px; 
+        margin-bottom: 10px;
+        color: black;
+    }
+
+    /* 결과 박스 스타일 */
+    .result-box-value {
+        width: 100%;
+        font-size: 26px;
         font-weight: 900;
-        padding: 12px;
+        padding: 15px 5px;
         background: #ffe5cc;
-        border: 1px solid #cccccc;
-        border-radius: 6px;
+        border: 2px solid black;
+        border-radius: 8px;
         text-align: center;
-        margin-bottom: 8px;
         color: black !important;
-        box-shadow: none;
+        margin-bottom: 10px;
     }
-    .pass, .fail {
-        font-size: 24px;
+
+    .status-box {
+        width: 100%;
+        font-size: 26px;
         font-weight: 900;
-        padding: 12px;
-        border: 1px solid #cccccc;
-        border-radius: 6px;
+        padding: 15px 5px;
+        border: 2px solid black;
+        border-radius: 8px;
         text-align: center;
-        margin-bottom: 8px;
-        box-shadow: none;
+        margin-bottom: 10px;
     }
     .pass { background: #00cc44; color: white !important; }
     .fail { background: #ff7f00; color: white !important; }
+
+    /* 버튼 스타일 */
     .stButton > button, .stDownloadButton > button {
         width: 100% !important;
         height: 60px !important;
-        font-size: 16px !important;
+        font-size: 18px !important;
         font-weight: 900 !important;
         background-color: #f0f0f0 !important;
         color: black !important;
         border: 2px solid black !important;
-        border-radius: 4px !important;
-        margin-top: 5px;
+        border-radius: 8px !important;
     }
-    input {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-        border: 1px solid #cccccc !important;
+    .stButton > button:hover, .stDownloadButton > button:hover {
+        background-color: #e0e0e0 !important;
     }
+
+    /* 수평 배치 유지 (모바일 환경 고려) */
     div[data-testid="stHorizontalBlock"] {
         align-items: center;
-        gap: 0.5rem;
     }
-    .k-info { font-size: 13px; color: #555 !important; margin-bottom: 4px; }
+
+    /* 푸터 스타일 */
+    .footer {
+        display: flex;
+        justify-content: flex-start;
+        margin-top: 50px;
+        border-top: 1px solid #ddd;
+        padding-top: 20px;
+    }
+    .footer-text {
+        font-size: 14px;
+        color: #666;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # ======================================================
-# 열효율(k) 테이블
+# 로직 및 세션 데이터 초기화
 # ======================================================
 EFFICIENCY = {
     "SAW":  {"AWS": 1.0, "ISO": 1.0},
@@ -87,58 +119,29 @@ EFFICIENCY = {
     "SMAW": {"AWS": 1.0, "ISO": 0.8},
 }
 
-def validate_inputs(voltage, current, length, time_s):
-    errors = []
-    if voltage <= 0:
-        errors.append("전압(Volt)은 0보다 커야 합니다.")
-    if current <= 0:
-        errors.append("전류(Amp)는 0보다 커야 합니다.")
-    if length <= 0:
-        errors.append("비드 길이(Len)는 0보다 커야 합니다.")
-    if time_s <= 0:
-        errors.append("시간(Time)은 0보다 커야 합니다.")
-    if voltage > 100:
-        errors.append("전압(Volt)이 비현실적입니다 (최대 100V).")
-    if current > 2000:
-        errors.append("전류(Amp)가 비현실적입니다 (최대 2000A).")
-    return errors
-
-def draw_input_row(label, value, key, step=0.1, fmt="%.1f"):
-    r_cols = st.columns([1.5, 2])
-    with r_cols[0]:
-        st.markdown("**" + label + "**")
-    with r_cols[1]:
-        return st.number_input(label, value=value, step=step, format=fmt, key=key, label_visibility="collapsed")
-
-# ======================================================
-# 세션 상태 초기화
-# ======================================================
 if "history" not in st.session_state:
     st.session_state.history = []
-if "wps_no" not in st.session_state:
-    st.session_state.wps_no = ""
-if "welder_no" not in st.session_state:
-    st.session_state.welder_no = ""
-if "joint_no" not in st.session_state:
-    st.session_state.joint_no = ""
-if "pass_type" not in st.session_state:
-    st.session_state.pass_type = "Root"
 
-st.markdown('<div class="main-container">', unsafe_allow_html=True)
+def draw_input_row(label, value, key, step=0.1, fmt="%.1f"):
+    cols = st.columns([1.5, 1])
+    with cols[0]:
+        st.markdown(f"**{label}**")
+    with cols[1]:
+        return st.number_input(label, value=value, step=step, format=fmt, key=key, label_visibility="collapsed")
 
 # ======================================================
 # Header
 # ======================================================
 st.markdown(
-    '<div class="header">'
-    '<img src="https://raw.githubusercontent.com/jubailsanghoon/Heatinput/main/db65c0d39f36f2dddc248ea0bf2e4efc.jpg">'
-    '<div class="title">Heat Input Master</div>'
-    '</div>',
+    f'<div class="header">'
+    f'<img src="https://raw.githubusercontent.com/jubailsanghoon/HeatInput2/main/db65c0d39f36f2dddc248ea0bf2e4efc.jpg">'
+    f'<div class="title">Heat Input Master</div>'
+    f'</div>',
     unsafe_allow_html=True
 )
 
 # ======================================================
-# 1. Standard & Process Selection
+# 1. Standard / Process
 # ======================================================
 c_std, c_prc = st.columns([1, 1])
 with c_std:
@@ -148,155 +151,101 @@ with c_prc:
     st.markdown('<div class="section-title">Process</div>', unsafe_allow_html=True)
     process = st.radio("Prc", ["SAW", "FCAW", "SMAW", "GMAW"], horizontal=True, label_visibility="collapsed")
 
-k = EFFICIENCY[process][standard]
-st.markdown(
-    '<div class="k-info">Thermal Efficiency (k) = <b>' + str(k) + '</b> &nbsp;|&nbsp; ' + standard + ' / ' + process + '</div>',
-    unsafe_allow_html=True
-)
+k_val = EFFICIENCY[process][standard]
 
 # ======================================================
-# 2. Input Parameters (left) | Live Result (right)
+# 2. 메인 레이아웃 (Input Parameters & WPS/Result)
 # ======================================================
-st.write("")
-col_left, col_right = st.columns([1.2, 1])
+st.write("---")
+col_input, col_gap, col_result = st.columns([1.2, 0.1, 1.1])
 
-with col_left:
+with col_input:
     st.markdown('<div class="section-title">Input Parameters</div>', unsafe_allow_html=True)
-    voltage = draw_input_row("Volt (V)", 30.0, "v")
-    current = draw_input_row("Amp (A)", 300.0, "c")
-    length  = draw_input_row("Len (mm)", 5.0, "l")
-    time_s  = draw_input_row("Time (s)", 1.0, "t")
+    volt = draw_input_row("Voltage (V)", 30.0, "v_val")
+    amp  = draw_input_row("Current (A)", 300.0, "c_val")
+    len_mm = draw_input_row("Length (mm)", 5.0, "l_val")
+    time_s = draw_input_row("Time (sec)", 1.0, "t_val")
 
-with col_right:
+with col_result:
+    st.markdown('<div class="section-title">WPS Range (kJ/mm)</div>', unsafe_allow_html=True)
+    # WPS Range 모드 선택 (Input / No input)
+    wps_mode = st.radio("WPS Mode", ["Input", "No input"], horizontal=True, label_visibility="collapsed")
+    
+    # [Min/Max 나란히 배치 유지] - WPS Mode와 상관없이 레이아웃 고정
+    w_cols = st.columns([1, 1])
+    with w_cols[0]:
+        m_row = st.columns([0.8, 1.2])
+        with m_row[0]: st.markdown("**Min.**")
+        with m_row[1]: 
+            w_min = st.number_input("Min", value=0.96, step=0.01, format="%.2f", key="min_input", label_visibility="collapsed", disabled=(wps_mode == "No input"))
+    with w_cols[1]:
+        x_row = st.columns([0.8, 1.2])
+        with x_row[0]: st.markdown("**Max.**")
+        with x_row[1]: 
+            w_max = st.number_input("Max", value=2.50, step=0.01, format="%.2f", key="max_input", label_visibility="collapsed", disabled=(wps_mode == "No input"))
+
     st.markdown('<div class="section-title">Live Result</div>', unsafe_allow_html=True)
-
-    _min = st.session_state.get("min_range", 0.96)
-    _max = st.session_state.get("max_range", 2.50)
-
-    _errors = validate_inputs(voltage, current, length, time_s)
-    if not _errors:
-        HI = (k * voltage * current * time_s) / (length * 1000)
-        status = "PASS" if _min <= HI <= _max else "FAIL"
+    hi_res = (k_val * volt * amp * time_s) / (len_mm * 1000) if len_mm > 0 else 0.0
+    
+    if wps_mode == "Input":
+        # 판정 결과 포함 (PASS/FAIL)
+        res_status = "PASS" if w_min <= hi_res <= w_max else "FAIL"
+        res_cols = st.columns([0.55, 0.45])
+        with res_cols[0]:
+            st.markdown(f'<div class="result-box-value">{hi_res:.3f}</div>', unsafe_allow_html=True)
+        with res_cols[1]:
+            st.markdown(f'<div class="status-box {res_status.lower()}">{res_status}</div>', unsafe_allow_html=True)
     else:
-        HI = 0.0
-        status = "FAIL"
-
-    st.markdown('<div class="result-box">' + str(round(HI, 3)) + ' kJ/mm</div>', unsafe_allow_html=True)
-    if _errors:
-        st.markdown('<div class="fail">INPUT ERR</div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="' + status.lower() + '">' + status + '</div>', unsafe_allow_html=True)
-
-errors = _errors
-for err in errors:
-    st.error(err)
+        # No input인 경우 판정 안함 (수치만 표시)
+        res_status = "N/A"
+        st.markdown(f'<div class="result-box-value">{hi_res:.3f} kJ/mm</div>', unsafe_allow_html=True)
 
 # ======================================================
-# 3. Additional Info
+# 3. 버튼 레이아웃 - Save / Export (나란히 배치)
 # ======================================================
 st.write("")
-st.markdown('<div class="section-title">Additional Info <span style="font-weight:400; font-size:13px; color:#888;">(선택 입력)</span></div>', unsafe_allow_html=True)
+btn_row1 = st.columns([1, 1])
 
-opt_col1, opt_col2 = st.columns(2)
-with opt_col1:
-    st.text_input("WPS No.", placeholder="예) WPS-001", key="wps_no")
-with opt_col2:
-    st.text_input("Welder No.", placeholder="예) W-123", key="welder_no")
-
-opt_col3, opt_col4 = st.columns(2)
-with opt_col3:
-    st.text_input("Joint No.", placeholder="예) J-01", key="joint_no")
-with opt_col4:
-    st.markdown("**Pass Type**")
-    st.radio("Pass Type", ["Root", "Fill", "Cap"], horizontal=True, label_visibility="collapsed", key="pass_type")
-
-# ======================================================
-# 4. WPS Range
-# ======================================================
-st.write("")
-st.markdown('<div class="section-title">WPS Range (kJ/mm)</div>', unsafe_allow_html=True)
-wr_cols = st.columns([0.5, 1.5, 0.5, 1.5])
-with wr_cols[0]:
-    st.markdown("**Min**")
-with wr_cols[1]:
-    min_range = st.number_input("min", value=0.96, step=0.01, format="%.2f",
-                                label_visibility="collapsed", key="min_range")
-with wr_cols[2]:
-    st.markdown("**Max**")
-with wr_cols[3]:
-    max_range = st.number_input("max", value=2.50, step=0.01, format="%.2f",
-                                label_visibility="collapsed", key="max_range")
-
-if min_range >= max_range:
-    st.warning("WPS Min 값은 Max 값보다 작아야 합니다.")
-
-# ======================================================
-# 5. 버튼 구역 (Save Data | Export CSV | Recent History)  한 줄
-# ======================================================
-st.write("")
-b_cols = st.columns(3)
-
-with b_cols[0]:
-    save_disabled = bool(errors) or (min_range >= max_range)
-    if st.button("💾 Save Data", disabled=save_disabled):
-        new_entry = {
-            "Time":    datetime.now().strftime("%H:%M:%S"),
-            "WPS No.": st.session_state.wps_no if st.session_state.wps_no else "-",
-            "Pass":    st.session_state.pass_type,
-            "Welder":  st.session_state.welder_no if st.session_state.welder_no else "-",
-            "Joint":   st.session_state.joint_no if st.session_state.joint_no else "-",
-            "Std":     standard,
-            "Prc":     process,
-            "k":       k,
-            "HI":      round(HI, 3),
-            "Result":  status,
-            "V":       voltage,
-            "A":       current,
-            "L(mm)":   length,
-            "T(s)":    time_s,
-            "Min":     min_range,
-            "Max":     max_range,
+with btn_row1[0]:
+    if st.button("💾 Save"):
+        # 로컬 시스템 시간을 사용하여 데이터 저장
+        entry = {
+            "Time": datetime.now().strftime("%H:%M:%S"),
+            "Std": standard, "Prc": process, "HI": round(hi_res, 3), "Res": res_status,
+            "V": volt, "A": amp, "L": len_mm, "T": time_s
         }
-        st.session_state.history.insert(0, new_entry)
-        if len(st.session_state.history) > 50:
-            st.session_state.history.pop()
-        st.toast("저장되었습니다!", icon="✅")
+        st.session_state.history.insert(0, entry)
+        if len(st.session_state.history) > 50: st.session_state.history.pop()
         st.rerun()
 
-with b_cols[1]:
+with btn_row1[1]:
     if st.session_state.history:
-        csv = pd.DataFrame(st.session_state.history).to_csv(index=False).encode("utf-8-sig")
-        st.download_button(
-            label="📤 Export CSV",
-            data=csv,
-            file_name="HI_" + datetime.now().strftime("%m%d_%H%M") + ".csv",
-            mime="text/csv"
-        )
+        csv_out = pd.DataFrame(st.session_state.history).to_csv(index=False).encode("utf-8-sig")
+        st.download_button(label="📤 Export", data=csv_out, file_name=f"HeatInput_{datetime.now().strftime('%m%d_%H%M')}.csv", mime="text/csv")
     else:
-        st.button("📤 Export CSV", disabled=True)
+        st.button("📤 Export", disabled=True)
 
-with b_cols[2]:
-    if st.session_state.history:
+# ======================================================
+# 4. 히스토리 관리 (Clear History 버튼만 유지)
+# ======================================================
+if st.session_state.history:
+    st.write("---")
+    btn_row2 = st.columns([1, 1])
+    # Recent History 버튼 박스 삭제 후 Clear History 버튼만 우측 배치 유지
+    with btn_row2[1]:
         if st.button("🗑️ Clear History"):
             st.session_state.history = []
             st.rerun()
-    else:
-        st.button("📋 Recent History", disabled=True)
+
+    st.markdown('<div class="section-title">History Records (Max 50)</div>', unsafe_allow_html=True)
+    st.table(pd.DataFrame(st.session_state.history))
 
 # ======================================================
-# 6. 히스토리 테이블
+# 5. Footer (이메일 및 왼쪽 정렬)
 # ======================================================
-if st.session_state.history:
-    st.markdown('<div class="section-title">Recent History (최근 50건)</div>', unsafe_allow_html=True)
-
-    df = pd.DataFrame(st.session_state.history)
-
-    def highlight_result(val):
-        if val == "PASS":
-            return "background-color: #00cc44; color: white; font-weight: bold;"
-        elif val == "FAIL":
-            return "background-color: #ff7f00; color: white; font-weight: bold;"
-        return ""
-
-    styled_df = df.style.applymap(highlight_result, subset=["Result"])
-    st.dataframe(styled_df, use_container_width=True)
+st.markdown(
+    f'<div class="footer">'
+    f'<div class="footer-text"><b>jubail.sanghoon@gmail.com</b></div>'
+    f'</div>',
+    unsafe_allow_html=True
+)
