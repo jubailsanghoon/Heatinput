@@ -155,7 +155,7 @@ st.markdown(
 )
 
 # ======================================================
-# 2. Input Parameters (left) | Live Result + WPS Range (right)
+# 2. Input Parameters (left) | Live Result (right)
 # ======================================================
 st.write("")
 col_left, col_right = st.columns([1.2, 1])
@@ -187,13 +187,31 @@ with col_right:
     else:
         st.markdown('<div class="' + status.lower() + '">' + status + '</div>', unsafe_allow_html=True)
 
-# 유효성 오류 표시
 errors = _errors
 for err in errors:
     st.error(err)
 
 # ======================================================
-# 3. WPS Range
+# 3. Additional Info
+# ======================================================
+st.write("")
+st.markdown('<div class="section-title">Additional Info <span style="font-weight:400; font-size:13px; color:#888;">(선택 입력)</span></div>', unsafe_allow_html=True)
+
+opt_col1, opt_col2 = st.columns(2)
+with opt_col1:
+    st.text_input("WPS No.", placeholder="예) WPS-001", key="wps_no")
+with opt_col2:
+    st.text_input("Welder No.", placeholder="예) W-123", key="welder_no")
+
+opt_col3, opt_col4 = st.columns(2)
+with opt_col3:
+    st.text_input("Joint No.", placeholder="예) J-01", key="joint_no")
+with opt_col4:
+    st.markdown("**Pass Type**")
+    st.radio("Pass Type", ["Root", "Fill", "Cap"], horizontal=True, label_visibility="collapsed", key="pass_type")
+
+# ======================================================
+# 4. WPS Range
 # ======================================================
 st.write("")
 st.markdown('<div class="section-title">WPS Range (kJ/mm)</div>', unsafe_allow_html=True)
@@ -213,33 +231,14 @@ if min_range >= max_range:
     st.warning("WPS Min 값은 Max 값보다 작아야 합니다.")
 
 # ======================================================
-# 4. Optional Info Fields
+# 5. 버튼 구역 (Save Data | Export CSV | Recent History)  한 줄
 # ======================================================
 st.write("")
-st.markdown('<div class="section-title">Additional Info <span style="font-weight:400; font-size:13px; color:#888;">(선택 입력)</span></div>', unsafe_allow_html=True)
-
-opt_col1, opt_col2 = st.columns(2)
-with opt_col1:
-    st.text_input("WPS No.", placeholder="예) WPS-001", key="wps_no")
-with opt_col2:
-    st.text_input("Welder No.", placeholder="예) W-123", key="welder_no")
-
-opt_col3, opt_col4 = st.columns(2)
-with opt_col3:
-    st.text_input("Joint No.", placeholder="예) J-01", key="joint_no")
-with opt_col4:
-    st.markdown("**Pass Type**")
-    st.radio("Pass Type", ["Root", "Fill", "Cap"], horizontal=True, label_visibility="collapsed", key="pass_type")
-
-# ======================================================
-# 5. 버튼 구역
-# ======================================================
-st.write("")
-b_cols = st.columns([10, 1, 10])
+b_cols = st.columns(3)
 
 with b_cols[0]:
     save_disabled = bool(errors) or (min_range >= max_range)
-    if st.button("Save Data", disabled=save_disabled):
+    if st.button("💾 Save Data", disabled=save_disabled):
         new_entry = {
             "Time":    datetime.now().strftime("%H:%M:%S"),
             "WPS No.": st.session_state.wps_no if st.session_state.wps_no else "-",
@@ -264,29 +263,31 @@ with b_cols[0]:
         st.toast("저장되었습니다!", icon="✅")
         st.rerun()
 
-with b_cols[2]:
+with b_cols[1]:
     if st.session_state.history:
         csv = pd.DataFrame(st.session_state.history).to_csv(index=False).encode("utf-8-sig")
         st.download_button(
-            label="Export CSV",
+            label="📤 Export CSV",
             data=csv,
             file_name="HI_" + datetime.now().strftime("%m%d_%H%M") + ".csv",
             mime="text/csv"
         )
     else:
-        st.button("Export CSV", disabled=True)
+        st.button("📤 Export CSV", disabled=True)
+
+with b_cols[2]:
+    if st.session_state.history:
+        if st.button("🗑️ Clear History"):
+            st.session_state.history = []
+            st.rerun()
+    else:
+        st.button("📋 Recent History", disabled=True)
 
 # ======================================================
 # 6. 히스토리 테이블
 # ======================================================
 if st.session_state.history:
     st.markdown('<div class="section-title">Recent History (최근 50건)</div>', unsafe_allow_html=True)
-
-    col_clear, _ = st.columns([1, 3])
-    with col_clear:
-        if st.button("Clear History"):
-            st.session_state.history = []
-            st.rerun()
 
     df = pd.DataFrame(st.session_state.history)
 
@@ -299,5 +300,3 @@ if st.session_state.history:
 
     styled_df = df.style.applymap(highlight_result, subset=["Result"])
     st.dataframe(styled_df, use_container_width=True)
-
-st.markdown("</div>", unsafe_allow_html=True)
