@@ -168,11 +168,8 @@ with col_left:
     time_s  = draw_input_row("Time (s)", 1.0, "t")
 
 with col_right:
-    # --- Live Result ---
     st.markdown('<div class="section-title">Live Result</div>', unsafe_allow_html=True)
 
-    # 임시 계산용 기본값으로 HI 미리 계산 (위젯 값은 아래 선언 후 반영됨)
-    # Streamlit 특성상 위젯 선언 전 값은 이전 렌더링 값을 사용 → 정상 동작
     _min = st.session_state.get("min_range", 0.96)
     _max = st.session_state.get("max_range", 2.50)
 
@@ -190,38 +187,52 @@ with col_right:
     else:
         st.markdown('<div class="' + status.lower() + '">' + status + '</div>', unsafe_allow_html=True)
 
-    # --- WPS Range (PASS 박스 아래) ---
-    st.markdown('<div class="section-title">WPS Range (kJ/mm)</div>', unsafe_allow_html=True)
-    wr_cols = st.columns([0.6, 1.4])
-    with wr_cols[0]:
-        st.markdown("**Min**")
-    with wr_cols[1]:
-        min_range = st.number_input("min", value=0.96, step=0.01, format="%.2f",
-                                    label_visibility="collapsed", key="min_range")
-    wr_cols2 = st.columns([0.6, 1.4])
-    with wr_cols2[0]:
-        st.markdown("**Max**")
-    with wr_cols2[1]:
-        max_range = st.number_input("max", value=2.50, step=0.01, format="%.2f",
-                                    label_visibility="collapsed", key="max_range")
-
-    if min_range >= max_range:
-        st.warning("Min < Max 이어야 합니다.")
-
-# 최종 유효성 및 계산 (위젯 값 확정 후)
-errors = validate_inputs(voltage, current, length, time_s)
-if not errors:
-    HI = (k * voltage * current * time_s) / (length * 1000)
-    status = "PASS" if min_range <= HI <= max_range else "FAIL"
-else:
-    HI = 0.0
-    status = "FAIL"
-
+# 유효성 오류 표시
+errors = _errors
 for err in errors:
     st.error(err)
 
 # ======================================================
-# 3. 버튼 구역
+# 3. WPS Range
+# ======================================================
+st.write("")
+st.markdown('<div class="section-title">WPS Range (kJ/mm)</div>', unsafe_allow_html=True)
+wr_cols = st.columns([0.5, 1.5, 0.5, 1.5])
+with wr_cols[0]:
+    st.markdown("**Min**")
+with wr_cols[1]:
+    min_range = st.number_input("min", value=0.96, step=0.01, format="%.2f",
+                                label_visibility="collapsed", key="min_range")
+with wr_cols[2]:
+    st.markdown("**Max**")
+with wr_cols[3]:
+    max_range = st.number_input("max", value=2.50, step=0.01, format="%.2f",
+                                label_visibility="collapsed", key="max_range")
+
+if min_range >= max_range:
+    st.warning("WPS Min 값은 Max 값보다 작아야 합니다.")
+
+# ======================================================
+# 4. Optional Info Fields
+# ======================================================
+st.write("")
+st.markdown('<div class="section-title">Additional Info <span style="font-weight:400; font-size:13px; color:#888;">(선택 입력)</span></div>', unsafe_allow_html=True)
+
+opt_col1, opt_col2 = st.columns(2)
+with opt_col1:
+    st.text_input("WPS No.", placeholder="예) WPS-001", key="wps_no")
+with opt_col2:
+    st.text_input("Welder No.", placeholder="예) W-123", key="welder_no")
+
+opt_col3, opt_col4 = st.columns(2)
+with opt_col3:
+    st.text_input("Joint No.", placeholder="예) J-01", key="joint_no")
+with opt_col4:
+    st.markdown("**Pass Type**")
+    st.radio("Pass Type", ["Root", "Fill", "Cap"], horizontal=True, label_visibility="collapsed", key="pass_type")
+
+# ======================================================
+# 5. 버튼 구역
 # ======================================================
 st.write("")
 b_cols = st.columns([10, 1, 10])
@@ -266,26 +277,7 @@ with b_cols[2]:
         st.button("Export CSV", disabled=True)
 
 # ======================================================
-# 4. Optional Info Fields
-# ======================================================
-st.write("")
-st.markdown('<div class="section-title">Additional Info <span style="font-weight:400; font-size:13px; color:#888;">(선택 입력)</span></div>', unsafe_allow_html=True)
-
-opt_col1, opt_col2 = st.columns(2)
-with opt_col1:
-    st.text_input("WPS No.", placeholder="예) WPS-001", key="wps_no")
-with opt_col2:
-    st.text_input("Welder No.", placeholder="예) W-123", key="welder_no")
-
-opt_col3, opt_col4 = st.columns(2)
-with opt_col3:
-    st.text_input("Joint No.", placeholder="예) J-01", key="joint_no")
-with opt_col4:
-    st.markdown("**Pass Type**")
-    st.radio("Pass Type", ["Root", "Fill", "Cap"], horizontal=True, label_visibility="collapsed", key="pass_type")
-
-# ======================================================
-# 5. 히스토리 테이블
+# 6. 히스토리 테이블
 # ======================================================
 if st.session_state.history:
     st.markdown('<div class="section-title">Recent History (최근 50건)</div>', unsafe_allow_html=True)
