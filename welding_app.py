@@ -235,7 +235,7 @@ with opt_col4:
 # ======================================================
 # 5. 버튼 구역
 # ======================================================
-b_cols = st.columns([1, 0.1, 1])
+b_cols = st.columns([10, 1, 10])
 
 with b_cols[0]:
     save_disabled = bool(errors) or (min_range >= max_range)
