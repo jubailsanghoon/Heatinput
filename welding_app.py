@@ -1,9 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import pytz
-
-KST = pytz.timezone("Asia/Seoul")
+import streamlit.components.v1 as components
 
 st.set_page_config(layout="centered", page_title="Heat Input Master")
 
@@ -52,9 +50,46 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ── 세션 상태 초기화 ──
 if 'history' not in st.session_state:
     st.session_state.history = []
 
+# ── query_params에서 로컬 시간 읽기 ──
+params = st.query_params
+local_time = params.get("localtime", "")
+if not (local_time and len(local_time) == 8):
+    local_time = datetime.now().strftime("%H:%M:%S")
+
+# ── JS: Save Data 버튼에 mousedown 시 로컬 시간을 URL에 기록 ──
+components.html("""
+<script>
+(function() {
+    function attachListener() {
+        const buttons = window.parent.document.querySelectorAll('button');
+        for (let btn of buttons) {
+            if (btn.innerText.trim() === 'Save Data' && !btn._timeListenerAttached) {
+                btn._timeListenerAttached = true;
+                btn.addEventListener('mousedown', function() {
+                    const now = new Date();
+                    const t = String(now.getHours()).padStart(2,'0') + ':'
+                            + String(now.getMinutes()).padStart(2,'0') + ':'
+                            + String(now.getSeconds()).padStart(2,'0');
+                    const url = new URL(window.parent.location.href);
+                    url.searchParams.set('localtime', t);
+                    window.parent.history.replaceState({}, '', url);
+                });
+            }
+        }
+    }
+    // DOM 변경 감지해서 버튼이 생길 때마다 리스너 부착
+    const observer = new MutationObserver(attachListener);
+    observer.observe(window.parent.document.body, { childList: true, subtree: true });
+    attachListener();
+})();
+</script>
+""", height=0)
+
+# ── Header ──
 st.markdown("""
 <div class="header">
 <img src="https://raw.githubusercontent.com/jubailsanghoon/Heatinput/main/db65c0d39f36f2dddc248ea0bf2e4efc.jpg">
@@ -147,26 +182,7 @@ pass_type = st.radio("Pass", ["Root", "Fill", "Cap"], horizontal=True, label_vis
 btn_left, btn_gap, btn_right = st.columns([0.475, 0.05, 0.475])
 
 with btn_left:
-    if st.button("Save Data"):
-        new_entry = {
-            "Time":       datetime.now(KST).strftime("%H:%M:%S"),
-            "Std":        standard,
-            "Prc":        process,
-            "HI":         round(HI, 3),
-            "Res":        status,
-            "V":          voltage,
-            "A":          current,
-            "L":          length,
-            "T":          time,
-            "WPS No.":    wps_no,
-            "Welder No.": welder_no,
-            "Joint No.":  joint_no,
-            "Pass":       pass_type,
-        }
-        st.session_state.history.insert(0, new_entry)
-        if len(st.session_state.history) > 50:
-            st.session_state.history.pop()
-        st.rerun()
+    save_clicked = st.button("Save Data")
 
 with btn_right:
     if st.session_state.history:
@@ -174,11 +190,32 @@ with btn_right:
         st.download_button(
             label="Export",
             data=csv,
-            file_name=f"HI_{datetime.now(KST).strftime('%m%d_%H%M')}.csv",
+            file_name=f"HI_{datetime.now().strftime('%m%d_%H%M')}.csv",
             mime="text/csv"
         )
     else:
         st.button("Export", disabled=True)
+
+if save_clicked:
+    new_entry = {
+        "Time":       local_time,
+        "Std":        standard,
+        "Prc":        process,
+        "HI":         round(HI, 3),
+        "Res":        status,
+        "V":          voltage,
+        "A":          current,
+        "L":          length,
+        "T":          time,
+        "WPS No.":    wps_no,
+        "Welder No.": welder_no,
+        "Joint No.":  joint_no,
+        "Pass":       pass_type,
+    }
+    st.session_state.history.insert(0, new_entry)
+    if len(st.session_state.history) > 50:
+        st.session_state.history.pop()
+    st.rerun()
 
 # 7. History
 if st.session_state.history:
